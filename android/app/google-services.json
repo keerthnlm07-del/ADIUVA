@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "975712420973",
+    "project_id": "adiuva-aa007",
+    "storage_bucket": "adiuva-aa007.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:975712420973:android:b6ad5b1f9ec12a80fceb64",
+        "android_client_info": {
+          "package_name": "com.example.adiuva"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB-iKUBOGQbQtKjufbSSsor2yQHS2w1R1U"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

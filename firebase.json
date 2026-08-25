@@ -1,1 +1,26 @@
-{"flutter":{"platforms":{"android":{"default":{"projectId":"adiuva-aa007","appId":"1:975712420973:android:b6ad5b1f9ec12a80fceb64","fileOutput":"android/app/google-services.json"}},"dart":{"lib/firebase_options.dart":{"projectId":"adiuva-aa007","configurations":{"android":"1:975712420973:android:b6ad5b1f9ec12a80fceb64","web":"1:975712420973:web:287564b15c6b55c1fceb64","windows":"1:975712420973:web:805594425112e2b6fceb64"}}}}}}
+{
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "adiuva-aa007",
+          "appId": "1:975712420973:android:b6ad5b1f9ec12a80fceb64",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "adiuva-aa007",
+          "configurations": {
+            "android": "1:975712420973:android:b6ad5b1f9ec12a80fceb64",
+            "web": "1:975712420973:web:287564b15c6b55c1fceb64",
+            "windows": "1:975712420973:web:805594425112e2b6fceb64"
+          }
+        }
+      }
+    }
+  },
+  "firestore": {
+    "rules": "firestore.rules"
+  }
+}

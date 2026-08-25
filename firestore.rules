@@ -1,0 +1,400 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ==================== HELPER FUNCTIONS ====================
+    
+    function isAuthenticatedUser() {
+      return request.auth != null;
+    }
+
+    function isOwnDocument(userId) {
+      return isAuthenticatedUser() && request.auth.uid == userId;
+    }
+
+    function hasRequiredFields(requiredFields) {
+      let data = request.resource.data;
+      return data.keys().hasAll(requiredFields);
+    }
+
+    function validateFieldType(fieldName, expectedType) {
+      let data = request.resource.data;
+      return !(fieldName in data) || 
+             (expectedType == 'string' && data[fieldName] is string) ||
+             (expectedType == 'number' && data[fieldName] is number) ||
+             (expectedType == 'boolean' && data[fieldName] is bool) ||
+             (expectedType == 'timestamp' && data[fieldName] is timestamp) ||
+             (expectedType == 'array' && data[fieldName] is list) ||
+             (expectedType == 'map' && data[fieldName] is map);
+    }
+
+    function isValidUserType(userType) {
+      let validTypes = [
+        'visually_impaired', 'deaf', 'speech_impaired',
+        'cognitively_impaired', 'physically_disabled', 'normal'
+      ];
+      return userType in validTypes;
+    }
+
+    function isValidPriority(priority) {
+      return priority in ['low', 'medium', 'high'];
+    }
+
+    function isValidRelationship(rel) {
+      return rel in ['family', 'friend', 'emergency_services', 'caregiver', 'other'];
+    }
+
+    function isValidContrastMode(mode) {
+      return mode in ['normal', 'high', 'extra_high'];
+    }
+
+    function isValidPrivacyLevel(level) {
+      return level in ['public', 'friends', 'private'];
+    }
+
+    function isValidNotificationType(type) {
+      return type in ['reminder', 'emergency', 'alert', 'info'];
+    }
+
+    function isValidRepeatType(type) {
+      return type in ['once', 'daily', 'weekly', 'monthly'];
+    }
+
+    function isValidSOSStatus(status) {
+      return status in ['triggered', 'resolved', 'cancelled'];
+    }
+
+    function onlyFieldsChanged(allowedFields) {
+      return isAuthenticatedUser() &&
+             request.resource.data.diff(resource.data).affectedKeys()
+               .hasOnly(allowedFields);
+    }
+
+    // ==================== USERS COLLECTION ====================
+    
+    match /users/{userId} {
+      // Read: Only own document
+      allow read: if isOwnDocument(userId);
+
+      // Create: User can only create their own profile with correct Auth UID
+      allow create: if isOwnDocument(userId)
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.email == request.auth.token.email
+        && hasRequiredFields(['userId', 'email', 'name', 'userType', 'disabilityTypes', 'language', 'createdAt', 'updatedAt', 'isActive'])
+        && validateFieldType('name', 'string')
+        && request.resource.data.name.size() > 0
+        && validateFieldType('userType', 'string')
+        && isValidUserType(request.resource.data.userType)
+        && validateFieldType('disabilityTypes', 'array')
+        && request.resource.data.disabilityTypes.size() > 0
+        && validateFieldType('language', 'string')
+        && validateFieldType('isActive', 'boolean')
+        && validateFieldType('phone', 'string')
+        && validateFieldType('photoUrl', 'string')
+        && validateFieldType('lastLoginAt', 'timestamp')
+        && validateFieldType('createdAt', 'timestamp')
+        && validateFieldType('updatedAt', 'timestamp');
+
+      // Update: Cannot change userId or email; validate other fields
+      allow update: if isOwnDocument(userId)
+        && !('userId' in request.resource.data.diff(resource.data).affectedKeys())
+        && !('email' in request.resource.data.diff(resource.data).affectedKeys())
+        && !('createdAt' in request.resource.data.diff(resource.data).affectedKeys())
+        && validateFieldType('name', 'string')
+        && validateFieldType('userType', 'string')
+        && isValidUserType(request.resource.data.userType)
+        && validateFieldType('disabilityTypes', 'array')
+        && validateFieldType('isActive', 'boolean')
+        && validateFieldType('phone', 'string')
+        && validateFieldType('photoUrl', 'string')
+        && validateFieldType('lastLoginAt', 'timestamp')
+        && validateFieldType('updatedAt', 'timestamp');
+
+      // Delete: Not allowed
+      allow delete: if false;
+    }
+
+    // ==================== ACCESSIBILITY PREFERENCES ====================
+    
+    match /accessibility_preferences/{userId} {
+      allow read: if isOwnDocument(userId);
+
+      allow create: if isOwnDocument(userId)
+        && request.resource.data.userId == request.auth.uid
+        && hasRequiredFields(['userId', 'fontSize', 'contrastMode', 'darkMode', 
+                               'voiceFeedbackEnabled', 'ttsSpeed', 'ttsLanguage',
+                               'reducedMotion', 'screenReaderEnabled', 'updatedAt'])
+        && validateFieldType('fontSize', 'number')
+        && request.resource.data.fontSize >= 0.8 && request.resource.data.fontSize <= 2.0
+        && validateFieldType('contrastMode', 'string')
+        && isValidContrastMode(request.resource.data.contrastMode)
+        && validateFieldType('darkMode', 'boolean')
+        && validateFieldType('voiceFeedbackEnabled', 'boolean')
+        && validateFieldType('ttsSpeed', 'number')
+        && request.resource.data.ttsSpeed >= 0.5 && request.resource.data.ttsSpeed <= 2.0
+        && validateFieldType('ttsLanguage', 'string')
+        && validateFieldType('reducedMotion', 'boolean')
+        && validateFieldType('screenReaderEnabled', 'boolean')
+        && validateFieldType('updatedAt', 'timestamp');
+
+      allow update: if isOwnDocument(userId)
+        && !('userId' in request.resource.data.diff(resource.data).affectedKeys())
+        && validateFieldType('fontSize', 'number')
+        && validateFieldType('contrastMode', 'string')
+        && validateFieldType('darkMode', 'boolean')
+        && validateFieldType('voiceFeedbackEnabled', 'boolean')
+        && validateFieldType('ttsSpeed', 'number')
+        && validateFieldType('ttsLanguage', 'string')
+        && validateFieldType('reducedMotion', 'boolean')
+        && validateFieldType('screenReaderEnabled', 'boolean')
+        && validateFieldType('updatedAt', 'timestamp');
+
+      allow delete: if false;
+    }
+
+    // ==================== USER PREFERENCES ====================
+    
+    match /user_preferences/{userId} {
+      allow read: if isOwnDocument(userId);
+
+      allow create: if isOwnDocument(userId)
+        && request.resource.data.userId == request.auth.uid
+        && hasRequiredFields(['userId', 'notificationsEnabled', 'ttsEnabled',
+                               'cameraFeatureEnabled', 'locationSharingEnabled',
+                               'dataCollectionConsent', 'privacyLevel', 
+                               'onboardingCompleted', 'updatedAt'])
+        && validateFieldType('notificationsEnabled', 'boolean')
+        && validateFieldType('ttsEnabled', 'boolean')
+        && validateFieldType('cameraFeatureEnabled', 'boolean')
+        && validateFieldType('locationSharingEnabled', 'boolean')
+        && validateFieldType('dataCollectionConsent', 'boolean')
+        && validateFieldType('privacyLevel', 'string')
+        && isValidPrivacyLevel(request.resource.data.privacyLevel)
+        && validateFieldType('onboardingCompleted', 'boolean')
+        && validateFieldType('updatedAt', 'timestamp');
+
+      allow update: if isOwnDocument(userId)
+        && !('userId' in request.resource.data.diff(resource.data).affectedKeys())
+        && validateFieldType('notificationsEnabled', 'boolean')
+        && validateFieldType('ttsEnabled', 'boolean')
+        && validateFieldType('cameraFeatureEnabled', 'boolean')
+        && validateFieldType('locationSharingEnabled', 'boolean')
+        && validateFieldType('dataCollectionConsent', 'boolean')
+        && validateFieldType('privacyLevel', 'string')
+        && validateFieldType('onboardingCompleted', 'boolean')
+        && validateFieldType('updatedAt', 'timestamp');
+
+      allow delete: if false;
+    }
+
+    // ==================== EMERGENCY CONTACTS ====================
+    
+    match /emergency_contacts/{contactId} {
+      // Read: Only own contacts
+      allow read: if isAuthenticatedUser()
+        && resource.data.userId == request.auth.uid;
+
+      // Create: User can only create contacts for themselves
+      allow create: if isAuthenticatedUser()
+        && request.resource.data.userId == request.auth.uid
+        && hasRequiredFields(['contactId', 'userId', 'name', 'phone', 
+                               'relationship', 'isPrimary', 'createdAt'])
+        && validateFieldType('contactId', 'string')
+        && validateFieldType('name', 'string')
+        && request.resource.data.name.size() > 0
+        && validateFieldType('phone', 'string')
+        && request.resource.data.phone.size() > 0
+        && validateFieldType('relationship', 'string')
+        && isValidRelationship(request.resource.data.relationship)
+        && validateFieldType('isPrimary', 'boolean')
+        && validateFieldType('email', 'string')
+        && validateFieldType('createdAt', 'timestamp');
+
+      // Update: Cannot change userId; user can update their own contacts
+      allow update: if isAuthenticatedUser()
+        && resource.data.userId == request.auth.uid
+        && !('userId' in request.resource.data.diff(resource.data).affectedKeys())
+        && !('createdAt' in request.resource.data.diff(resource.data).affectedKeys())
+        && validateFieldType('name', 'string')
+        && validateFieldType('phone', 'string')
+        && validateFieldType('relationship', 'string')
+        && validateFieldType('isPrimary', 'boolean')
+        && validateFieldType('email', 'string');
+
+      // Delete: User can delete their own contacts
+      allow delete: if isAuthenticatedUser()
+        && resource.data.userId == request.auth.uid;
+    }
+
+    // ==================== EMERGENCY EVENTS ====================
+    
+    match /emergency_events/{eventId} {
+      // Read: Only own events
+      allow read: if isAuthenticatedUser()
+        && resource.data.userId == request.auth.uid;
+
+      // Create: User can only trigger SOS for themselves
+      allow create: if isAuthenticatedUser()
+        && request.resource.data.userId == request.auth.uid
+        && hasRequiredFields(['eventId', 'userId', 'latitude', 'longitude', 
+                               'timestamp', 'status', 'contactsAttempted'])
+        && validateFieldType('eventId', 'string')
+        && validateFieldType('latitude', 'number')
+        && validateFieldType('longitude', 'number')
+        && validateFieldType('timestamp', 'timestamp')
+        && validateFieldType('status', 'string')
+        && request.resource.data.status == 'triggered'
+        && validateFieldType('contactsAttempted', 'array')
+        && validateFieldType('resolvedAt', 'timestamp')
+        && validateFieldType('notes', 'string');
+
+      // Update: Only allow status changes and resolution
+      allow update: if isAuthenticatedUser()
+        && resource.data.userId == request.auth.uid
+        && !('userId' in request.resource.data.diff(resource.data).affectedKeys())
+        && !('latitude' in request.resource.data.diff(resource.data).affectedKeys())
+        && !('longitude' in request.resource.data.diff(resource.data).affectedKeys())
+        && !('timestamp' in request.resource.data.diff(resource.data).affectedKeys())
+        && !('contactsAttempted' in request.resource.data.diff(resource.data).affectedKeys())
+        && onlyFieldsChanged(['status', 'resolvedAt', 'notes'])
+        && validateFieldType('status', 'string')
+        && isValidSOSStatus(request.resource.data.status)
+        && validateFieldType('resolvedAt', 'timestamp')
+        && validateFieldType('notes', 'string');
+
+      // Delete: Not allowed
+      allow delete: if false;
+    }
+
+    // ==================== TASKS ====================
+    
+    match /tasks/{taskId} {
+      // Read: Only own tasks
+      allow read: if isAuthenticatedUser()
+        && resource.data.userId == request.auth.uid;
+
+      // Create: User can only create tasks for themselves
+      allow create: if isAuthenticatedUser()
+        && request.resource.data.userId == request.auth.uid
+        && hasRequiredFields(['taskId', 'userId', 'title', 'priority', 
+                               'isCompleted', 'createdAt', 'updatedAt'])
+        && validateFieldType('taskId', 'string')
+        && validateFieldType('title', 'string')
+        && request.resource.data.title.size() > 0 && request.resource.data.title.size() <= 100
+        && validateFieldType('description', 'string')
+        && validateFieldType('priority', 'string')
+        && isValidPriority(request.resource.data.priority)
+        && validateFieldType('dueDate', 'timestamp')
+        && validateFieldType('isCompleted', 'boolean')
+        && validateFieldType('completedAt', 'timestamp')
+        && validateFieldType('tags', 'array')
+        && validateFieldType('createdAt', 'timestamp')
+        && validateFieldType('updatedAt', 'timestamp');
+
+      // Update: Cannot change userId; user updates their own tasks
+      allow update: if isAuthenticatedUser()
+        && resource.data.userId == request.auth.uid
+        && !('userId' in request.resource.data.diff(resource.data).affectedKeys())
+        && !('createdAt' in request.resource.data.diff(resource.data).affectedKeys())
+        && validateFieldType('title', 'string')
+        && validateFieldType('description', 'string')
+        && validateFieldType('priority', 'string')
+        && validateFieldType('dueDate', 'timestamp')
+        && validateFieldType('isCompleted', 'boolean')
+        && validateFieldType('completedAt', 'timestamp')
+        && validateFieldType('tags', 'array')
+        && validateFieldType('updatedAt', 'timestamp');
+
+      // Delete: User deletes their own tasks
+      allow delete: if isAuthenticatedUser()
+        && resource.data.userId == request.auth.uid;
+    }
+
+    // ==================== REMINDERS ====================
+    
+    match /reminders/{reminderId} {
+      // Read: Only own reminders
+      allow read: if isAuthenticatedUser()
+        && resource.data.userId == request.auth.uid;
+
+      // Create: User can only create reminders for themselves
+      allow create: if isAuthenticatedUser()
+        && request.resource.data.userId == request.auth.uid
+        && hasRequiredFields(['reminderId', 'userId', 'title', 'reminderDateTime', 
+                               'isEnabled', 'repeatType', 'createdAt'])
+        && validateFieldType('reminderId', 'string')
+        && validateFieldType('title', 'string')
+        && request.resource.data.title.size() > 0
+        && validateFieldType('description', 'string')
+        && validateFieldType('reminderDateTime', 'timestamp')
+        && validateFieldType('isEnabled', 'boolean')
+        && validateFieldType('repeatType', 'string')
+        && isValidRepeatType(request.resource.data.repeatType)
+        && validateFieldType('repeatDays', 'array')
+        && validateFieldType('relatedTaskId', 'string')
+        && validateFieldType('createdAt', 'timestamp');
+
+      // Update: Cannot change userId; user updates their own reminders
+      allow update: if isAuthenticatedUser()
+        && resource.data.userId == request.auth.uid
+        && !('userId' in request.resource.data.diff(resource.data).affectedKeys())
+        && !('createdAt' in request.resource.data.diff(resource.data).affectedKeys())
+        && validateFieldType('title', 'string')
+        && validateFieldType('description', 'string')
+        && validateFieldType('reminderDateTime', 'timestamp')
+        && validateFieldType('isEnabled', 'boolean')
+        && validateFieldType('repeatType', 'string')
+        && validateFieldType('repeatDays', 'array')
+        && validateFieldType('relatedTaskId', 'string');
+
+      // Delete: User deletes their own reminders
+      allow delete: if isAuthenticatedUser()
+        && resource.data.userId == request.auth.uid;
+    }
+
+    // ==================== NOTIFICATIONS ====================
+    
+    match /notifications/{notificationId} {
+      // Read: Only own notifications
+      allow read: if isAuthenticatedUser()
+        && resource.data.userId == request.auth.uid;
+
+      // Create: User creates their own notifications (in-app)
+      allow create: if isAuthenticatedUser()
+        && request.resource.data.userId == request.auth.uid
+        && hasRequiredFields(['notificationId', 'userId', 'type', 'title', 'body', 'isRead', 'createdAt'])
+        && validateFieldType('notificationId', 'string')
+        && validateFieldType('type', 'string')
+        && isValidNotificationType(request.resource.data.type)
+        && validateFieldType('title', 'string')
+        && request.resource.data.title.size() > 0
+        && validateFieldType('body', 'string')
+        && request.resource.data.body.size() > 0
+        && validateFieldType('data', 'map')
+        && validateFieldType('isRead', 'boolean')
+        && validateFieldType('readAt', 'timestamp')
+        && validateFieldType('actionUrl', 'string')
+        && validateFieldType('createdAt', 'timestamp');
+
+      // Update: User can mark notifications as read
+      allow update: if isAuthenticatedUser()
+        && resource.data.userId == request.auth.uid
+        && !('userId' in request.resource.data.diff(resource.data).affectedKeys())
+        && !('createdAt' in request.resource.data.diff(resource.data).affectedKeys())
+        && !('type' in request.resource.data.diff(resource.data).affectedKeys())
+        && !('title' in request.resource.data.diff(resource.data).affectedKeys())
+        && !('body' in request.resource.data.diff(resource.data).affectedKeys())
+        && onlyFieldsChanged(['isRead', 'readAt']);
+
+      // Delete: User can delete their own notifications
+      allow delete: if isAuthenticatedUser()
+        && resource.data.userId == request.auth.uid;
+    }
+
+    // ==================== DENY ALL OTHER PATHS ====================
+    
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

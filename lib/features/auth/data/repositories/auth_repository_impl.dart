@@ -54,47 +54,26 @@ class AuthRepositoryImpl implements AuthRepository {
       }
 
       // 3. Fetch or create Firestore user document
-      final userResponse = await _getOrCreateFirestoreUser(
+      final userModel = await _getOrCreateFirestoreUser(
         userId: userId,
         email: email,
       );
 
-      if (!userResponse.isSuccess) {
+      if (userModel == null) {
         return BaseResponse<UserEntity>.error(
-          error: userResponse.error ?? ApiException.firestore('Failed to load user profile'),
+          error: ApiException.firestore('Failed to get user profile'),
         );
       }
 
-      final userEntity = userResponse.data;
-      if (userEntity == null) {
-        return BaseResponse<UserEntity>.error(
-          error: ApiException.firestore('User profile is empty'),
-        );
-      }
-
-      // 4. Save to local storage
+      // 4. Save to local storage (fire and forget)
       try {
-        final userModel = UserModel(
-          userId: userEntity.userId,
-          email: userEntity.email,
-          name: userEntity.name,
-          userType: userEntity.userType,
-          disabilityTypes: userEntity.disabilityTypes,
-          language: userEntity.language,
-          isActive: userEntity.isActive,
-          phone: userEntity.phone,
-          photoUrl: userEntity.photoUrl,
-          createdAt: userEntity.createdAt,
-          updatedAt: userEntity.updatedAt,
-          lastLoginAt: userEntity.lastLoginAt,
-        );
         await _authLocalDataSource.saveUserLocally(userModel);
       } catch (e) {
-        // Log to local storage failed, but don't fail the login
+        // Local storage failure doesn't fail the login
       }
 
       return BaseResponse<UserEntity>.success(
-        data: userEntity,
+        data: userModel.toEntity(),
         message: 'Login successful',
       );
     } catch (e) {
@@ -145,7 +124,7 @@ class AuthRepositoryImpl implements AuthRepository {
             'email': email.trim(),
             'name': name.trim(),
             'userType': 'normal',
-            'disabilityTypes': [],
+            'disabilityTypes': <String>[],
             'language': 'en',
             'isActive': true,
             'createdAt': FieldValue.serverTimestamp(),
@@ -169,11 +148,11 @@ class AuthRepositoryImpl implements AuthRepository {
         );
       }
 
-      // 5. Save to local storage
+      // 5. Save to local storage (fire and forget)
       try {
         await _authLocalDataSource.saveUserLocally(userModel);
       } catch (e) {
-        // Log to local storage failed, but don't fail the signup
+        // Local storage failure doesn't fail the signup
       }
 
       return BaseResponse<UserEntity>.success(
@@ -203,11 +182,11 @@ class AuthRepositoryImpl implements AuthRepository {
         );
       }
 
-      // 2. Clear local storage
+      // 2. Clear local storage (fire and forget)
       try {
         await _authLocalDataSource.clearUserData();
       } catch (e) {
-        // Log clear failed, but logout was successful
+        // Local storage clear failure doesn't fail the logout
       }
 
       return BaseResponse<void>.success(
@@ -276,7 +255,7 @@ class AuthRepositoryImpl implements AuthRepository {
 
       // 2. User exists, fetch their Firestore profile
       final userId = authResponse.data!.uid;
-      final userModel = await _getUserModelFromFirestore(userId);
+      final userModel = await _getOrCreateFirestoreUser(userId: userId);
 
       return BaseResponse<UserEntity?>.success(
         data: userModel?.toEntity(),
@@ -294,30 +273,31 @@ class AuthRepositoryImpl implements AuthRepository {
 
   @override
   Stream<UserEntity?> authStateChanges() {
-    return _authRemoteDataSource.authStateChanges().asyncMap((firebaseUser) async {
-      if (firebaseUser == null) {
-        return null;
-      }
+    return _authRemoteDataSource.authStateChanges().asyncMap(
+      (firebaseUser) async {
+        if (firebaseUser == null) {
+          return null;
+        }
 
-      try {
-        final userModel = await _getUserModelFromFirestore(firebaseUser.uid);
-        return userModel?.toEntity();
-      } catch (e) {
-        // If we can't get the profile, still emit the auth state change
-        // but with minimal info from Firebase
-        return UserEntity(
-          userId: firebaseUser.uid,
-          email: firebaseUser.email ?? '',
-          name: firebaseUser.displayName ?? 'User',
-          userType: 'normal',
-          disabilityTypes: [],
-          language: 'en',
-          isActive: true,
-          createdAt: DateTime.now().millisecondsSinceEpoch,
-          updatedAt: DateTime.now().millisecondsSinceEpoch,
-        );
-      }
-    });
+        try {
+          final userModel = await _getUserModelFromFirestore(firebaseUser.uid);
+          return userModel?.toEntity();
+        } catch (e) {
+          // If we can't get the profile, return minimal entity from Firebase user
+          return UserEntity(
+            userId: firebaseUser.uid,
+            email: firebaseUser.email ?? '',
+            name: firebaseUser.displayName ?? 'User',
+            userType: 'normal',
+            disabilityTypes: const <String>[],
+            language: 'en',
+            isActive: true,
+            createdAt: DateTime.now().millisecondsSinceEpoch,
+            updatedAt: DateTime.now().millisecondsSinceEpoch,
+          );
+        }
+      },
+    );
   }
 
   // ==================== PRIVATE HELPERS ====================
@@ -326,15 +306,18 @@ class AuthRepositoryImpl implements AuthRepository {
   /// 
   /// Tries to read existing user document.
   /// If doesn't exist, creates a default one.
-  Future<BaseResponse<UserEntity?>> _getOrCreateFirestoreUser({
+  /// 
+  /// Returns UserModel if successful, null if creation fails.
+  Future<UserModel?> _getOrCreateFirestoreUser({
     required String userId,
-    required String email,
+    String? email,
   }) async {
     try {
+      // Try to read existing document
       final userModel = await _getUserModelFromFirestore(userId);
 
       if (userModel != null) {
-        return BaseResponse<UserEntity?>.success(data: userModel.toEntity());
+        return userModel;
       }
 
       // User document doesn't exist, create default one
@@ -343,10 +326,10 @@ class AuthRepositoryImpl implements AuthRepository {
           'users/$userId',
           {
             'userId': userId,
-            'email': email.trim(),
-            'name': 'User', // Fallback name
+            'email': email ?? '',
+            'name': 'User',
             'userType': 'normal',
-            'disabilityTypes': [],
+            'disabilityTypes': <String>[],
             'language': 'en',
             'isActive': true,
             'createdAt': FieldValue.serverTimestamp(),
@@ -355,29 +338,20 @@ class AuthRepositoryImpl implements AuthRepository {
         );
 
         // Read it back to get timestamps
-        final createdModel = await _getUserModelFromFirestore(userId);
-        return BaseResponse<UserEntity?>.success(data: createdModel?.toEntity());
+        return await _getUserModelFromFirestore(userId);
       } catch (e) {
-        return BaseResponse<UserEntity?>.error(
-          error: ApiException.firestore(
-            'Failed to create user profile',
-            originalException: e is Exception ? e : null,
-          ),
-        );
+        // Creation failed, return null
+        return null;
       }
     } catch (e) {
-      return BaseResponse<UserEntity?>.error(
-        error: ApiException.unknown(
-          'Unexpected error accessing user profile',
-          originalException: e is Exception ? e : null,
-        ),
-      );
+      return null;
     }
   }
 
   /// Get UserModel from Firestore by userId
   /// 
   /// Returns null if document doesn't exist.
+  /// Throws ApiException if read fails.
   Future<UserModel?> _getUserModelFromFirestore(String userId) async {
     try {
       final doc = await _firebaseService.readDocument('users/$userId');
@@ -388,6 +362,8 @@ class AuthRepositoryImpl implements AuthRepository {
 
       final data = doc.data() as Map<String, dynamic>;
       return UserModel.fromFirestore(data);
+    } on ApiException {
+      rethrow;
     } catch (e) {
       throw ApiException.firestore(
         'Failed to read user profile',

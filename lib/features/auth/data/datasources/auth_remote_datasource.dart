@@ -45,6 +45,7 @@ class AuthRemoteDataSource {
   Future<BaseResponse<UserCredential>> signup({
     required String email,
     required String password,
+    required String name,
   }) async {
     try {
       final credential =
@@ -52,6 +53,12 @@ class AuthRemoteDataSource {
         email: email.trim(),
         password: password,
       );
+
+      final user = credential.user;
+      if (user != null) {
+        // Set Firebase displayName after account creation
+        await user.updateDisplayName(name.trim());
+      }
 
       return BaseResponse<UserCredential>.success(
         data: credential,
@@ -147,6 +154,14 @@ class AuthRemoteDataSource {
         statusCode: 400,
       );
     }
+  }
+
+  /// Listen to authentication state changes
+  /// 
+  /// Returns a stream that emits whenever the user logs in or out.
+  /// Emits the User when authenticated, null when logged out.
+  Stream<User?> authStateChanges() {
+    return _firebaseAuth.authStateChanges();
   }
 
   ApiException _mapFirebaseAuthException(

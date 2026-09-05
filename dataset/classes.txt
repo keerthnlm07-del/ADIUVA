@@ -1,0 +1,6 @@
+watch
+keys
+wallet
+medicine_bottle
+medicine_strip
+earphone_case

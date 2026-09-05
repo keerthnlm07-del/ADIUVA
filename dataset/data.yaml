@@ -1,0 +1,14 @@
+# ADiUVA Custom YOLOv8 Object Detection Dataset Config
+path: ./dataset # dataset root dir
+train: images/train # train images (relative to path)
+val: images/val   # val images (relative to path)
+
+# Classes
+nc: 6
+names:
+  0: watch
+  1: keys
+  2: wallet
+  3: medicine_bottle
+  4: medicine_strip
+  5: earphone_case

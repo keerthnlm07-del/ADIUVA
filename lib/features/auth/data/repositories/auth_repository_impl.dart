@@ -27,6 +27,58 @@ class AuthRepositoryImpl implements AuthRepository {
         _firebaseService = firebaseService;
 
   @override
+  Future<BaseResponse<UserEntity>> signInWithGoogle() async {
+    try {
+      final authResponse = await _authRemoteDataSource.signInWithGoogle();
+
+      if (!authResponse.isSuccess || authResponse.data == null) {
+        return BaseResponse<UserEntity>.error(
+          error: authResponse.error ?? ApiException.auth('Google sign-in failed'),
+        );
+      }
+
+      final firebaseUser = authResponse.data!.user;
+      if (firebaseUser == null) {
+        return BaseResponse<UserEntity>.error(
+          error: ApiException.auth('User UID not available after Google sign-in'),
+        );
+      }
+
+      final userModel = await _getOrCreateFirestoreUser(
+        userId: firebaseUser.uid,
+        email: firebaseUser.email ?? '',
+      );
+
+      final userEntity = userModel?.toEntity() ??
+          UserEntity(
+            userId: firebaseUser.uid,
+            email: firebaseUser.email ?? '',
+            name: firebaseUser.displayName ?? 'Google User',
+            userType: 'normal',
+            disabilityTypes: const <String>[],
+            language: 'en',
+            isActive: true,
+            createdAt: DateTime.now().millisecondsSinceEpoch,
+            updatedAt: DateTime.now().millisecondsSinceEpoch,
+          );
+
+      if (userModel != null) {
+        await _authLocalDataSource.saveUserLocally(userModel);
+      }
+
+      return BaseResponse<UserEntity>.success(
+        data: userEntity,
+        message: 'Google sign-in successful',
+        statusCode: 200,
+      );
+    } catch (e) {
+      return BaseResponse<UserEntity>.error(
+        error: ApiException.unknown('Google sign-in failed: $e'),
+      );
+    }
+  }
+
+  @override
   Future<BaseResponse<UserEntity>> login({
     required String email,
     required String password,

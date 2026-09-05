@@ -1,4 +1,5 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 
 import '../../../../core/models/api_exception.dart';
 import '../../../../core/models/base_response.dart';
@@ -9,6 +10,48 @@ class AuthRemoteDataSource {
   AuthRemoteDataSource({
     FirebaseAuth? firebaseAuth,
   }) : _firebaseAuth = firebaseAuth ?? FirebaseAuth.instance;
+
+  Future<BaseResponse<UserCredential>> signInWithGoogle() async {
+    try {
+      final GoogleSignIn googleSignIn = GoogleSignIn();
+      final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
+
+      if (googleUser == null) {
+        return BaseResponse<UserCredential>.error(
+          error: ApiException.auth('Google sign-in was cancelled.'),
+          statusCode: 400,
+        );
+      }
+
+      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+      final OAuthCredential credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
+
+      final userCredential = await _firebaseAuth.signInWithCredential(credential);
+
+      return BaseResponse<UserCredential>.success(
+        data: userCredential,
+        message: 'Google sign-in successful',
+        statusCode: 200,
+      );
+    } on FirebaseAuthException catch (e, stackTrace) {
+      return BaseResponse<UserCredential>.error(
+        error: _mapFirebaseAuthException(e, stackTrace),
+        statusCode: 401,
+      );
+    } catch (e, stackTrace) {
+      return BaseResponse<UserCredential>.error(
+        error: ApiException.unknown(
+          'An unexpected error occurred during Google sign-in: $e',
+          originalException: e is Exception ? e : null,
+          stackTrace: stackTrace,
+        ),
+        statusCode: 500,
+      );
+    }
+  }
 
   Future<BaseResponse<UserCredential>> login({
     required String email,

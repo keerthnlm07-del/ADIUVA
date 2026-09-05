@@ -108,6 +108,31 @@ class AuthProvider extends ChangeNotifier {
     _listenToAuthStateChanges();
   }
 
+  /// Check and await authentication state resolution
+  Future<bool> checkAuthStatus() async {
+    if (_state is AuthLoading || _state is AuthInitial) {
+      int count = 0;
+      while ((_state is AuthLoading || _state is AuthInitial) && count < 30) {
+        await Future.delayed(const Duration(milliseconds: 100));
+        count++;
+      }
+    }
+
+    // Direct fallback check via repository
+    try {
+      final response = await _authRepository.getCurrentUser();
+      if (response.isSuccess && response.data != null) {
+        if (_state is! AuthAuthenticated) {
+          _state = AuthAuthenticated(user: response.data!);
+          notifyListeners();
+        }
+        return true;
+      }
+    } catch (_) {}
+
+    return isAuthenticated;
+  }
+
   /// Listen to authentication state changes stream
   /// 
   /// Updates provider state whenever user logs in/out.
@@ -131,18 +156,6 @@ class AuthProvider extends ChangeNotifier {
   }
 
   /// Login with email and password
-  /// 
-  /// Parameters:
-  /// - [email] - User email address
-  /// - [password] - User password
-  /// 
-  /// Example:
-  /// ```dart
-  /// await authProvider.login(
-  ///   email: 'user@example.com',
-  ///   password: 'password123',
-  /// );
-  /// ```
   Future<void> login({
     required String email,
     required String password,
@@ -171,21 +184,30 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Sign up with email, password, and name
-  /// 
-  /// Parameters:
-  /// - [email] - User email address
-  /// - [password] - User password
-  /// - [name] - User display name
-  /// 
-  /// Example:
-  /// ```dart
-  /// await authProvider.signup(
-  ///   email: 'newuser@example.com',
-  ///   password: 'password123',
-  ///   name: 'John Doe',
-  /// );
-  /// ```
+  /// Sign in with Google
+  Future<void> signInWithGoogle() async {
+    _state = const AuthLoading();
+    notifyListeners();
+
+    try {
+      final response = await _authRepository.signInWithGoogle();
+
+      if (response.isSuccess && response.data != null) {
+        _state = AuthAuthenticated(user: response.data!);
+      } else {
+        _state = AuthError(
+          message: response.error?.userMessage ?? 'Google sign-in failed',
+          code: response.error?.code,
+        );
+      }
+    } catch (e) {
+      _state = AuthError(message: 'Unexpected error during Google sign-in: $e');
+    }
+
+    notifyListeners();
+  }
+
+  /// Signup with user details
   Future<void> signup({
     required String email,
     required String password,
@@ -217,11 +239,6 @@ class AuthProvider extends ChangeNotifier {
   }
 
   /// Logout current user
-  /// 
-  /// Example:
-  /// ```dart
-  /// await authProvider.logout();
-  /// ```
   Future<void> logout() async {
     _state = const AuthLoading();
     notifyListeners();
@@ -245,14 +262,6 @@ class AuthProvider extends ChangeNotifier {
   }
 
   /// Send password reset email
-  /// 
-  /// Parameters:
-  /// - [email] - User email address
-  /// 
-  /// Example:
-  /// ```dart
-  /// await authProvider.resetPassword(email: 'user@example.com');
-  /// ```
   Future<void> resetPassword({
     required String email,
   }) async {
@@ -263,7 +272,6 @@ class AuthProvider extends ChangeNotifier {
       final response = await _resetPasswordUseCase(email: email);
 
       if (response.isSuccess) {
-        // Reset request sent, go back to unauthenticated state
         _state = const AuthUnauthenticated();
       } else {
         _state = AuthError(
@@ -279,19 +287,14 @@ class AuthProvider extends ChangeNotifier {
   }
 
   /// Clear error state
-  /// 
-  /// Call this to dismiss error messages.
   void clearError() {
     if (_state is AuthError) {
-      // Go back to previous state (unauthenticated)
       _state = const AuthUnauthenticated();
       notifyListeners();
     }
   }
 
   /// Clear all state and reset to initial
-  /// 
-  /// Useful for testing or when you need to reset the provider.
   void reset() {
     _state = const AuthInitial();
     _authStateSubscription?.cancel();
@@ -300,7 +303,6 @@ class AuthProvider extends ChangeNotifier {
 
   @override
   void dispose() {
-    // Cancel stream subscription when provider is disposed
     _authStateSubscription?.cancel();
     super.dispose();
   }

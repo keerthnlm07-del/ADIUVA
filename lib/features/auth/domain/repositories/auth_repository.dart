@@ -31,6 +31,9 @@ abstract class AuthRepository {
     required String password,
   });
 
+  /// Authenticate user via Google Sign-In
+  Future<BaseResponse<UserEntity>> signInWithGoogle();
+
   /// Sign up new user with email, password, and name
   /// 
   /// Creates new user account in Firebase Authentication and Firestore.

@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:provider/provider.dart';
 import '../theme/adiuva_spacing.dart';
+import '../../features/speech_assistance/presentation/provider/global_voice_control_provider.dart';
+import '../../features/speech_assistance/presentation/widgets/global_voice_fab.dart';
 
 /// ADIUVA Accessibility Scaffold
 /// 
@@ -10,6 +13,7 @@ import '../theme/adiuva_spacing.dart';
 /// - Live-region announcements when requested
 /// - Safe area compliance
 /// - Standardized padding and high-contrast support
+/// - Compulsory Global Voice control FAB on all non-splash screens
 class AccessibilityScaffold extends StatelessWidget {
   /// Title of the page for screen reader semantic announcements
   final String pageTitle;
@@ -61,11 +65,35 @@ class AccessibilityScaffold extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (initialAnnouncement != null && initialAnnouncement!.isNotEmpty) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (initialAnnouncement != null && initialAnnouncement!.isNotEmpty) {
         announce(initialAnnouncement!);
-      });
-    }
+      }
+      try {
+        final voice = Provider.of<GlobalVoiceControlProvider>(context, listen: false);
+        voice.setScreenContext(context, pageTitle);
+        final title = pageTitle.toLowerCase();
+        if (title != 'splash screen' && title != 'splash') {
+          voice.initAppVoiceStartup(context);
+        }
+      } catch (_) {}
+    });
+
+    final title = pageTitle.toLowerCase();
+    final isSplash = title == 'splash screen' || title == 'splash';
+    final effectiveFab = isSplash
+        ? null
+        : (floatingActionButton != null
+            ? Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  floatingActionButton!,
+                  AdiuvaSpacing.gapSm,
+                  const GlobalVoiceFab(),
+                ],
+              )
+            : const GlobalVoiceFab());
 
     return Semantics(
       label: '$pageTitle screen',
@@ -80,7 +108,7 @@ class AccessibilityScaffold extends StatelessWidget {
           ),
         ),
         bottomNavigationBar: bottomNavigationBar,
-        floatingActionButton: floatingActionButton,
+        floatingActionButton: effectiveFab,
         floatingActionButtonLocation: floatingActionButtonLocation,
       ),
     );

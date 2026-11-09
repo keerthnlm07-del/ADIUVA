@@ -8,6 +8,7 @@ import '../../../../core/widgets/custom_button.dart';
 import '../../../../core/widgets/adiuva_card.dart';
 import '../../../../config/routes/app_routes.dart';
 import '../provider/voice_mode_provider.dart';
+import '../provider/global_voice_control_provider.dart';
 import '../widgets/voice_button_widget.dart';
 
 /// ADIUVA Voice Mode Page
@@ -21,7 +22,12 @@ class VoicePage extends StatefulWidget {
 class _VoicePageState extends State<VoicePage> {
   @override
   void dispose() {
-    // Ensure active TTS/STT stops when leaving Voice Page
+    final rootCtx = AppRoutes.navigatorKey.currentContext;
+    if (rootCtx != null && rootCtx.mounted) {
+      try {
+        Provider.of<GlobalVoiceControlProvider>(rootCtx, listen: false).yieldMicrophoneToFeature(false);
+      } catch (_) {}
+    }
     super.dispose();
   }
 
@@ -63,9 +69,14 @@ class _VoicePageState extends State<VoicePage> {
       appBar: CustomAppBar(
         title: 'Voice Mode',
         showBackButton: true,
-        onBackPressed: () {
-          provider.stopSession();
-          Navigator.of(context).pop();
+        onBackPressed: () async {
+          final navigator = Navigator.of(context);
+          final gv = Provider.of<GlobalVoiceControlProvider>(context, listen: false);
+          await provider.stopSession();
+          try {
+            await gv.yieldMicrophoneToFeature(false);
+          } catch (_) {}
+          navigator.pop();
         },
       ),
       body: SingleChildScrollView(
@@ -97,8 +108,15 @@ class _VoicePageState extends State<VoicePage> {
             // 96dp Signature Voice Button Widget
             VoiceButtonWidget(
               state: state,
-              onTap: () {
-                provider.toggleVoiceSession();
+              onTap: () async {
+                final globalVoice = Provider.of<GlobalVoiceControlProvider>(context, listen: false);
+                if (state != VoiceStateEnum.listening) {
+                  await globalVoice.yieldMicrophoneToFeature(true);
+                }
+                await provider.toggleVoiceSession();
+                if (provider.state != VoiceStateEnum.listening) {
+                  await globalVoice.yieldMicrophoneToFeature(false);
+                }
               },
             ),
             AdiuvaSpacing.gapXxl,

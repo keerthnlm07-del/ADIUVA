@@ -7,23 +7,30 @@ import '../../../../core/widgets/adiuva_card.dart';
 import '../provider/accessibility_provider.dart';
 
 /// ADIUVA Language & Speech Recognition Locale Settings Page
+/// 
+/// Contains ONLY the 5 supported languages:
+/// 1. English
+/// 2. हिन्दी — Hindi
+/// 3. தமிழ் — Tamil
+/// 4. తెలుగు — Telugu
+/// 5. ಕನ್ನಡ — Kannada
 class LanguageSettingsPage extends StatelessWidget {
   const LanguageSettingsPage({super.key});
 
   static const Map<String, String> _supportedAppLanguages = {
-    'en': 'English (United States)',
-    'es': 'Español (Spanish)',
-    'hi': 'हिन्दी (Hindi)',
-    'fr': 'Français (French)',
-    'de': 'Deutsch (German)',
+    'en': 'English',
+    'hi': 'हिन्दी — Hindi',
+    'ta': 'தமிழ் — Tamil',
+    'te': 'తెలుగు — Telugu',
+    'kn': 'ಕನ್ನಡ — Kannada',
   };
 
   static const Map<String, String> _supportedSpeechLocales = {
-    'en-US': 'English (United States) [en-US]',
-    'es-ES': 'Spanish (Spain) [es-ES]',
-    'hi-IN': 'Hindi (India) [hi-IN]',
-    'fr-FR': 'French (France) [fr-FR]',
-    'de-DE': 'German (Germany) [de-DE]',
+    'en-IN': 'English [en-IN]',
+    'hi-IN': 'हिन्दी (Hindi) [hi-IN]',
+    'ta-IN': 'தமிழ் (Tamil) [ta-IN]',
+    'te-IN': 'తెలుగు (Telugu) [te-IN]',
+    'kn-IN': 'ಕನ್ನಡ (Kannada) [kn-IN]',
   };
 
   @override

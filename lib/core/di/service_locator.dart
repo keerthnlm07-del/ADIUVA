@@ -18,12 +18,19 @@ import '../../features/speech_assistance/presentation/provider/speech_assistance
 import '../../features/speech_assistance/presentation/provider/voice_mode_provider.dart';
 import '../../features/visual_assistance/data/datasources/ml_kit_ocr_service.dart';
 import '../../features/visual_assistance/data/datasources/yolo_tflite_service.dart';
+import '../../features/visual_assistance/data/datasources/adiuva_object_classifier_service.dart';
 import '../../features/visual_assistance/data/datasources/ml_kit_barcode_service.dart';
 import '../../features/visual_assistance/data/datasources/scene_description_service.dart';
+import '../../features/visual_assistance/data/datasources/document_reader_service.dart';
 import '../../features/visual_assistance/presentation/provider/visual_assistance_provider.dart';
 import '../../features/accessibility/presentation/provider/accessibility_provider.dart';
 import '../../features/emergency_sos/data/datasources/emergency_remote_datasource.dart';
 import '../../features/emergency_sos/presentation/provider/emergency_sos_provider.dart';
+import '../../features/speech_assistance/presentation/provider/global_voice_control_provider.dart';
+import '../../features/cognitive_assistance/presentation/provider/todo_provider.dart';
+import '../../features/cognitive_assistance/presentation/provider/reminder_provider.dart';
+import '../../features/cognitive_assistance/presentation/provider/notes_provider.dart';
+import '../../features/physical_assistance/presentation/provider/physical_assistance_provider.dart';
 
 /// Global Service Locator Instance (GetIt)
 final GetIt sl = GetIt.instance;
@@ -94,7 +101,7 @@ Future<void> setupServiceLocator() async {
     () => EmergencyRemoteDataSource(),
   );
 
-  sl.registerFactory<EmergencySosProvider>(
+  sl.registerLazySingleton<EmergencySosProvider>(
     () => EmergencySosProvider(
       remoteDataSource: sl<EmergencyRemoteDataSource>(),
       ttsService: sl<TtsService>(),
@@ -113,20 +120,45 @@ Future<void> setupServiceLocator() async {
     ),
   );
 
+  sl.registerLazySingleton<GlobalVoiceControlProvider>(
+    () => GlobalVoiceControlProvider(
+      sttService: sl<SttService>(),
+      ttsService: sl<TtsService>(),
+    ),
+  );
+
   // ==================== VISION FEATURE ====================
   sl.registerLazySingleton<MlKitOcrService>(() => MlKitOcrService());
   sl.registerLazySingleton<YoloTfliteService>(() => YoloTfliteService());
+  sl.registerLazySingleton<AdiuvaObjectClassifierService>(() => AdiuvaObjectClassifierService());
   sl.registerLazySingleton<MlKitBarcodeService>(() => MlKitBarcodeService());
   sl.registerLazySingleton<SceneDescriptionService>(() => SceneDescriptionService());
+  sl.registerLazySingleton<DocumentReaderService>(() => DocumentReaderService(ocrService: sl<MlKitOcrService>()));
 
   sl.registerFactory<VisualAssistanceProvider>(
     () => VisualAssistanceProvider(
       cameraService: sl<CameraService>(),
       ocrService: sl<MlKitOcrService>(),
       detectionService: sl<YoloTfliteService>(),
+      objectClassifierService: sl<AdiuvaObjectClassifierService>(),
       barcodeService: sl<MlKitBarcodeService>(),
       sceneService: sl<SceneDescriptionService>(),
       ttsService: sl<TtsService>(),
+      documentReaderService: sl<DocumentReaderService>(),
     ),
+  );
+
+  // ==================== COGNITIVE & PHYSICAL ASSISTANCE ====================
+  sl.registerFactory<TodoProvider>(
+    () => TodoProvider(storageService: sl<LocalStorageService>()),
+  );
+  sl.registerFactory<ReminderProvider>(
+    () => ReminderProvider(storageService: sl<LocalStorageService>()),
+  );
+  sl.registerFactory<NotesProvider>(
+    () => NotesProvider(storageService: sl<LocalStorageService>()),
+  );
+  sl.registerLazySingleton<PhysicalAssistanceProvider>(
+    () => PhysicalAssistanceProvider(storageService: sl<LocalStorageService>()),
   );
 }

@@ -69,16 +69,12 @@ class FeatureGrid extends StatelessWidget {
               },
             ),
             FeatureCard(
-              title: 'Navigate',
-              subtitle: 'Direction & obstacle assistant',
-              icon: Icons.explore_outlined,
+              title: 'Location',
+              subtitle: 'Check current location',
+              icon: Icons.my_location_rounded,
               iconColor: AdiuvaColors.voiceAmberDark,
               onTap: () {
-                if (onNavigateTab != null) {
-                  onNavigateTab!(3); // Switch to Navigate tab
-                } else {
-                  Navigator.of(context).pushNamed(AppRoutes.navigate);
-                }
+                Navigator.of(context).pushNamed(AppRoutes.location);
               },
             ),
           ],

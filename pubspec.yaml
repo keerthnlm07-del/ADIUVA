@@ -37,6 +37,7 @@ dependencies:
   speech_to_text: ^7.4.0
   flutter_tts: ^4.2.5
   geolocator: ^14.0.3
+  geocoding: ^3.0.0
   permission_handler: ^13.0.1
   url_launcher: ^6.3.0
   flutter_local_notifications: ^18.0.0
@@ -47,6 +48,12 @@ dependencies:
   flutter_svg: ^2.3.0
   connectivity_plus: ^7.3.1
   image: ^4.5.4
+  file_picker: ^12.2.0
+  syncfusion_flutter_pdf: ^34.2.8
+  syncfusion_flutter_pdfviewer: ^34.2.8
+  sensors_plus: ^7.1.0
+  flutter_3d_controller: ^2.3.0
+  video_player: ^2.14.1
 
 dev_dependencies:
   flutter_test:
@@ -59,4 +66,10 @@ flutter:
   assets:
     - assets/models/yolo/
     - assets/models/sign_language/
+    - assets/models/visual_assistance/
     - assets/images/
+    - assets/sign_language/
+    - assets/sign_language/animations/
+    - assets/sign_language/videos/
+    - assets/sign_language/alphabet/
+    - assets/sign_language/digits/

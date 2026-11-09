@@ -15,6 +15,9 @@ class UserEntity extends Equatable {
   /// User's display name
   final String name;
 
+  /// User's preferred nickname / name for personalized interaction (optional)
+  final String? preferredName;
+
   /// User's selected disability type
   /// Valid values: visually_impaired, deaf, speech_impaired,
   /// cognitively_impaired, physically_disabled, normal
@@ -49,6 +52,7 @@ class UserEntity extends Equatable {
     required this.userId,
     required this.email,
     required this.name,
+    this.preferredName,
     required this.userType,
     required this.disabilityTypes,
     required this.language,
@@ -66,6 +70,7 @@ class UserEntity extends Equatable {
       userId: '',
       email: '',
       name: '',
+      preferredName: null,
       userType: 'normal',
       disabilityTypes: [],
       language: 'en',
@@ -80,6 +85,7 @@ class UserEntity extends Equatable {
     String? userId,
     String? email,
     String? name,
+    String? preferredName,
     String? userType,
     List<String>? disabilityTypes,
     String? language,
@@ -94,6 +100,7 @@ class UserEntity extends Equatable {
       userId: userId ?? this.userId,
       email: email ?? this.email,
       name: name ?? this.name,
+      preferredName: preferredName ?? this.preferredName,
       userType: userType ?? this.userType,
       disabilityTypes: disabilityTypes ?? this.disabilityTypes,
       language: language ?? this.language,
@@ -114,11 +121,29 @@ class UserEntity extends Equatable {
         disabilityTypes.isNotEmpty;
   }
 
+  /// Greeting name resolved according to priority:
+  /// 1. Profile name from users/{uid} (name field)
+  /// 2. Email handle (substring before '@')
+  /// 3. Safe fallback (if neither is available)
+  String get greetingName {
+    if (name.trim().isNotEmpty && name.trim().toLowerCase() != 'user') {
+      return name.trim();
+    }
+    if (email.contains('@')) {
+      final handle = email.split('@').first.trim();
+      if (handle.isNotEmpty) {
+        return handle;
+      }
+    }
+    return 'User';
+  }
+
   @override
   List<Object?> get props => [
         userId,
         email,
         name,
+        preferredName,
         userType,
         disabilityTypes,
         language,

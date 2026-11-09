@@ -21,6 +21,21 @@ import '../../features/accessibility/presentation/pages/appearance_settings_page
 import '../../features/emergency_sos/presentation/pages/emergency_sos_page.dart';
 import '../../features/emergency_sos/presentation/pages/emergency_contacts_list_page.dart';
 import '../../features/emergency_sos/presentation/pages/add_emergency_contact_page.dart';
+import '../../features/hearing_assistance/presentation/pages/hearing_assistance_page.dart';
+import '../../features/cognitive_assistance/presentation/pages/cognitive_assistance_page.dart';
+import '../../features/cognitive_assistance/presentation/pages/todo_list_page.dart';
+import '../../features/cognitive_assistance/presentation/pages/reminders_page.dart';
+import '../../features/cognitive_assistance/presentation/pages/notes_page.dart';
+import '../../features/physical_assistance/presentation/pages/physical_assistance_page.dart';
+import '../../features/disability_selection/presentation/pages/disability_selection_page.dart';
+import '../../features/visual_assistance/presentation/pages/blind_dashboard_page.dart';
+import '../../features/visual_assistance/presentation/pages/visual_assistance_page.dart';
+import '../../features/home/presentation/pages/normal_dashboard_page.dart';
+import '../../features/sign_language/presentation/pages/sign_language_page.dart';
+import '../../features/sign_language/presentation/pages/sign_to_text_page.dart';
+import '../../features/sign_language/presentation/pages/text_to_sign_page.dart';
+import '../../features/physical_assistance/presentation/pages/location_page.dart';
+import '../../features/translator/presentation/pages/translator_page.dart';
 
 /// ADIUVA Route Generator
 /// 
@@ -90,7 +105,7 @@ class RouteGenerator {
         return _buildRoute(
           settings: settings,
           pageTitle: 'Vision',
-          builder: (context) => const NavigationShellPage(initialIndex: 2),
+          builder: (context) => const VisualAssistancePage(),
         );
 
       case AppRoutes.voiceMode:
@@ -98,13 +113,6 @@ class RouteGenerator {
           settings: settings,
           pageTitle: 'Voice Mode',
           builder: (context) => const VoicePage(),
-        );
-
-      case AppRoutes.navigate:
-        return _buildRoute(
-          settings: settings,
-          pageTitle: 'Navigate',
-          builder: (context) => const NavigationShellPage(initialIndex: 3),
         );
 
       case AppRoutes.profile:
@@ -188,7 +196,105 @@ class RouteGenerator {
         return _buildRoute(
           settings: settings,
           pageTitle: 'Change Password',
-          builder: (context) => const PlaceholderPage(title: 'Change Password'),
+          builder: (context) => const ForgotPasswordPage(),
+        );
+
+      case AppRoutes.hearingAssistance:
+        return _buildRoute(
+          settings: settings,
+          pageTitle: 'Hearing Assistance',
+          builder: (context) => const HearingAssistancePage(),
+        );
+
+      case AppRoutes.cognitiveAssistance:
+        return _buildRoute(
+          settings: settings,
+          pageTitle: 'Cognitive Assistance',
+          builder: (context) => const CognitiveAssistancePage(),
+        );
+
+      case AppRoutes.physicalAssistance:
+        return _buildRoute(
+          settings: settings,
+          pageTitle: 'Physical Assistance',
+          builder: (context) => const PhysicalAssistancePage(),
+        );
+
+      case AppRoutes.assistanceSetup:
+        return _buildRoute(
+          settings: settings,
+          pageTitle: 'Choose Mode',
+          builder: (context) => const DisabilitySelectionPage(),
+        );
+
+      case AppRoutes.todoList:
+        return _buildRoute(
+          settings: settings,
+          pageTitle: 'Daily Tasks',
+          builder: (context) => const TodoListPage(),
+        );
+
+      case AppRoutes.reminders:
+        return _buildRoute(
+          settings: settings,
+          pageTitle: 'Reminders',
+          builder: (context) => const RemindersPage(),
+        );
+
+      case AppRoutes.notes:
+        return _buildRoute(
+          settings: settings,
+          pageTitle: 'Memory Notes',
+          builder: (context) => const NotesPage(),
+        );
+
+      case AppRoutes.translator:
+        return _buildRoute(
+          settings: settings,
+          pageTitle: 'Translator',
+          builder: (context) => const TranslatorPage(),
+        );
+
+      case AppRoutes.blindMode:
+        return _buildRoute(
+          settings: settings,
+          pageTitle: 'Blind Assistance',
+          builder: (context) => const BlindDashboardPage(),
+        );
+
+      case AppRoutes.normalUser:
+        return _buildRoute(
+          settings: settings,
+          pageTitle: 'Normal User Suite',
+          builder: (context) => const NormalDashboardPage(),
+        );
+
+      case AppRoutes.signLanguage:
+        return _buildRoute(
+          settings: settings,
+          pageTitle: 'Sign Language',
+          builder: (context) => const SignLanguagePage(),
+        );
+
+      case AppRoutes.signToText:
+        return _buildRoute(
+          settings: settings,
+          pageTitle: 'Sign Language to Text',
+          builder: (context) => const SignLanguageToTextPage(),
+        );
+
+      case AppRoutes.textToSign:
+        return _buildRoute(
+          settings: settings,
+          pageTitle: 'Text to Sign Language',
+          builder: (context) => const TextToSignLanguagePage(),
+        );
+
+      case AppRoutes.location:
+        return _buildRoute(
+          settings: settings,
+          pageTitle: 'Location',
+          builder: (context) => const LocationPage(),
         );
 
       default:

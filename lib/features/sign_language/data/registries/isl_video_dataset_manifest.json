@@ -1,0 +1,429 @@
+[
+  {
+    "category": "Bear",
+    "real_filename": "WIN_20231102_12_38_17_Pro.mp4",
+    "asset_path": "assets/sign_language/videos/Bear/WIN_20231102_12_38_17_Pro.mp4",
+    "data_path": "data/isl_recording/videos/Bear/WIN_20231102_12_38_17_Pro.mp4",
+    "total_clips_in_dataset": 60
+  },
+  {
+    "category": "Break",
+    "real_filename": "WIN_20231102_13_29_56_Pro.mp4",
+    "asset_path": "assets/sign_language/videos/Break/WIN_20231102_13_29_56_Pro.mp4",
+    "data_path": "data/isl_recording/videos/Break/WIN_20231102_13_29_56_Pro.mp4",
+    "total_clips_in_dataset": 60
+  },
+  {
+    "category": "Brinjal",
+    "real_filename": "WIN_20231102_10_52_48_Pro.mp4",
+    "asset_path": "assets/sign_language/videos/Brinjal/WIN_20231102_10_52_48_Pro.mp4",
+    "data_path": "data/isl_recording/videos/Brinjal/WIN_20231102_10_52_48_Pro.mp4",
+    "total_clips_in_dataset": 60
+  },
+  {
+    "category": "Budget",
+    "real_filename": "WIN_20230901_09_29_50_Pro.mp4",
+    "asset_path": "assets/sign_language/videos/Budget/WIN_20230901_09_29_50_Pro.mp4",
+    "data_path": "data/isl_recording/videos/Budget/WIN_20230901_09_29_50_Pro.mp4",
+    "total_clips_in_dataset": 60
+  },
+  {
+    "category": "Busy",
+    "real_filename": "WIN_20230831_14_45_26_Pro.mp4",
+    "asset_path": "assets/sign_language/videos/Busy/WIN_20230831_14_45_26_Pro.mp4",
+    "data_path": "data/isl_recording/videos/Busy/WIN_20230831_14_45_26_Pro.mp4",
+    "total_clips_in_dataset": 60
+  },
+  {
+    "category": "Cabbage",
+    "real_filename": "WIN_20231102_11_05_03_Pro.mp4",
+    "asset_path": "assets/sign_language/videos/Cabbage/WIN_20231102_11_05_03_Pro.mp4",
+    "data_path": "data/isl_recording/videos/Cabbage/WIN_20231102_11_05_03_Pro.mp4",
+    "total_clips_in_dataset": 60
+  },
+  {
+    "category": "Carrot",
+    "real_filename": "WIN_20231102_11_18_27_Pro.mp4",
+    "asset_path": "assets/sign_language/videos/Carrot/WIN_20231102_11_18_27_Pro.mp4",
+    "data_path": "data/isl_recording/videos/Carrot/WIN_20231102_11_18_27_Pro.mp4",
+    "total_clips_in_dataset": 60
+  },
+  {
+    "category": "Cauliflower",
+    "real_filename": "WIN_20231102_11_34_51_Pro.mp4",
+    "asset_path": "assets/sign_language/videos/Cauliflower/WIN_20231102_11_34_51_Pro.mp4",
+    "data_path": "data/isl_recording/videos/Cauliflower/WIN_20231102_11_34_51_Pro.mp4",
+    "total_clips_in_dataset": 60
+  },
+  {
+    "category": "Chilli",
+    "real_filename": "WIN_20231102_11_47_32_Pro.mp4",
+    "asset_path": "assets/sign_language/videos/Chilli/WIN_20231102_11_47_32_Pro.mp4",
+    "data_path": "data/isl_recording/videos/Chilli/WIN_20231102_11_47_32_Pro.mp4",
+    "total_clips_in_dataset": 60
+  },
+  {
+    "category": "Clean",
+    "real_filename": "WIN_20231103_10_29_32_Pro.mp4",
+    "asset_path": "assets/sign_language/videos/Clean/WIN_20231103_10_29_32_Pro.mp4",
+    "data_path": "data/isl_recording/videos/Clean/WIN_20231103_10_29_32_Pro.mp4",
+    "total_clips_in_dataset": 60
+  },
+  {
+    "category": "Close",
+    "real_filename": "WIN_20231103_10_35_06_Pro.mp4",
+    "asset_path": "assets/sign_language/videos/Close/WIN_20231103_10_35_06_Pro.mp4",
+    "data_path": "data/isl_recording/videos/Close/WIN_20231103_10_35_06_Pro.mp4",
+    "total_clips_in_dataset": 60
+  },
+  {
+    "category": "Come",
+    "real_filename": "WIN_20231103_10_41_41_Pro.mp4",
+    "asset_path": "assets/sign_language/videos/Come/WIN_20231103_10_41_41_Pro.mp4",
+    "data_path": "data/isl_recording/videos/Come/WIN_20231103_10_41_41_Pro.mp4",
+    "total_clips_in_dataset": 60
+  },
+  {
+    "category": "Cook",
+    "real_filename": "WIN_20231103_10_45_35_Pro.mp4",
+    "asset_path": "assets/sign_language/videos/Cook/WIN_20231103_10_45_35_Pro.mp4",
+    "data_path": "data/isl_recording/videos/Cook/WIN_20231103_10_45_35_Pro.mp4",
+    "total_clips_in_dataset": 60
+  },
+  {
+    "category": "Crocodile",
+    "real_filename": "WIN_20231102_12_46_01_Pro.mp4",
+    "asset_path": "assets/sign_language/videos/Crocodile/WIN_20231102_12_46_01_Pro.mp4",
+    "data_path": "data/isl_recording/videos/Crocodile/WIN_20231102_12_46_01_Pro.mp4",
+    "total_clips_in_dataset": 60
+  },
+  {
+    "category": "Cry",
+    "real_filename": "WIN_20231103_10_51_30_Pro.mp4",
+    "asset_path": "assets/sign_language/videos/Cry/WIN_20231103_10_51_30_Pro.mp4",
+    "data_path": "data/isl_recording/videos/Cry/WIN_20231103_10_51_30_Pro.mp4",
+    "total_clips_in_dataset": 60
+  },
+  {
+    "category": "Cucumber",
+    "real_filename": "WIN_20231102_11_56_56_Pro.mp4",
+    "asset_path": "assets/sign_language/videos/Cucumber/WIN_20231102_11_56_56_Pro.mp4",
+    "data_path": "data/isl_recording/videos/Cucumber/WIN_20231102_11_56_56_Pro.mp4",
+    "total_clips_in_dataset": 60
+  },
+  {
+    "category": "Deer",
+    "real_filename": "WIN_20231102_12_52_30_Pro.mp4",
+    "asset_path": "assets/sign_language/videos/Deer/WIN_20231102_12_52_30_Pro.mp4",
+    "data_path": "data/isl_recording/videos/Deer/WIN_20231102_12_52_30_Pro.mp4",
+    "total_clips_in_dataset": 60
+  },
+  {
+    "category": "Drink",
+    "real_filename": "WIN_20231103_10_55_48_Pro.mp4",
+    "asset_path": "assets/sign_language/videos/Drink/WIN_20231103_10_55_48_Pro.mp4",
+    "data_path": "data/isl_recording/videos/Drink/WIN_20231103_10_55_48_Pro.mp4",
+    "total_clips_in_dataset": 60
+  },
+  {
+    "category": "Elephant",
+    "real_filename": "WIN_20231102_12_59_25_Pro.mp4",
+    "asset_path": "assets/sign_language/videos/Elephant/WIN_20231102_12_59_25_Pro.mp4",
+    "data_path": "data/isl_recording/videos/Elephant/WIN_20231102_12_59_25_Pro.mp4",
+    "total_clips_in_dataset": 60
+  },
+  {
+    "category": "Exam",
+    "real_filename": "WIN_20231103_11_20_16_Pro.mp4",
+    "asset_path": "assets/sign_language/videos/Exam/WIN_20231103_11_20_16_Pro.mp4",
+    "data_path": "data/isl_recording/videos/Exam/WIN_20231103_11_20_16_Pro.mp4",
+    "total_clips_in_dataset": 60
+  },
+  {
+    "category": "Fedup",
+    "real_filename": "WIN_20231103_13_02_30_Pro.mp4",
+    "asset_path": "assets/sign_language/videos/Fedup/WIN_20231103_13_02_30_Pro.mp4",
+    "data_path": "data/isl_recording/videos/Fedup/WIN_20231103_13_02_30_Pro.mp4",
+    "total_clips_in_dataset": 60
+  },
+  {
+    "category": "Fever",
+    "real_filename": "WIN_20230901_10_05_26_Pro.mp4",
+    "asset_path": "assets/sign_language/videos/Fever/WIN_20230901_10_05_26_Pro.mp4",
+    "data_path": "data/isl_recording/videos/Fever/WIN_20230901_10_05_26_Pro.mp4",
+    "total_clips_in_dataset": 60
+  },
+  {
+    "category": "Giraffe",
+    "real_filename": "WIN_20231102_13_05_27_Pro.mp4",
+    "asset_path": "assets/sign_language/videos/Giraffe/WIN_20231102_13_05_27_Pro.mp4",
+    "data_path": "data/isl_recording/videos/Giraffe/WIN_20231102_13_05_27_Pro.mp4",
+    "total_clips_in_dataset": 60
+  },
+  {
+    "category": "Give",
+    "real_filename": "WIN_20231103_10_59_37_Pro.mp4",
+    "asset_path": "assets/sign_language/videos/Give/WIN_20231103_10_59_37_Pro.mp4",
+    "data_path": "data/isl_recording/videos/Give/WIN_20231103_10_59_37_Pro.mp4",
+    "total_clips_in_dataset": 60
+  },
+  {
+    "category": "Good Morning",
+    "real_filename": "WIN_20231103_13_17_04_Pro.mp4",
+    "asset_path": "assets/sign_language/videos/Good Morning/WIN_20231103_13_17_04_Pro.mp4",
+    "data_path": "data/isl_recording/videos/Good Morning/WIN_20231103_13_17_04_Pro.mp4",
+    "total_clips_in_dataset": 60
+  },
+  {
+    "category": "Good afternoon",
+    "real_filename": "WIN_20231103_13_08_56_Pro.mp4",
+    "asset_path": "assets/sign_language/videos/Good afternoon/WIN_20231103_13_08_56_Pro.mp4",
+    "data_path": "data/isl_recording/videos/Good afternoon/WIN_20231103_13_08_56_Pro.mp4",
+    "total_clips_in_dataset": 60
+  },
+  {
+    "category": "Hello",
+    "real_filename": "WIN_20231103_13_22_45_Pro.mp4",
+    "asset_path": "assets/sign_language/videos/Hello/WIN_20231103_13_22_45_Pro.mp4",
+    "data_path": "data/isl_recording/videos/Hello/WIN_20231103_13_22_45_Pro.mp4",
+    "total_clips_in_dataset": 60
+  },
+  {
+    "category": "Hug",
+    "real_filename": "WIN_20230831_14_29_40_Pro.mp4",
+    "asset_path": "assets/sign_language/videos/Hug/WIN_20230831_14_29_40_Pro.mp4",
+    "data_path": "data/isl_recording/videos/Hug/WIN_20230831_14_29_40_Pro.mp4",
+    "total_clips_in_dataset": 60
+  },
+  {
+    "category": "Injury",
+    "real_filename": "WIN_20230831_14_19_14_Pro.mp4",
+    "asset_path": "assets/sign_language/videos/Injury/WIN_20230831_14_19_14_Pro.mp4",
+    "data_path": "data/isl_recording/videos/Injury/WIN_20230831_14_19_14_Pro.mp4",
+    "total_clips_in_dataset": 60
+  },
+  {
+    "category": "Interview",
+    "real_filename": "WIN_20230901_09_45_57_Pro.mp4",
+    "asset_path": "assets/sign_language/videos/Interview/WIN_20230901_09_45_57_Pro.mp4",
+    "data_path": "data/isl_recording/videos/Interview/WIN_20230901_09_45_57_Pro.mp4",
+    "total_clips_in_dataset": 60
+  },
+  {
+    "category": "Jump",
+    "real_filename": "WIN_20231103_11_03_33_Pro.mp4",
+    "asset_path": "assets/sign_language/videos/Jump/WIN_20231103_11_03_33_Pro.mp4",
+    "data_path": "data/isl_recording/videos/Jump/WIN_20231103_11_03_33_Pro.mp4",
+    "total_clips_in_dataset": 60
+  },
+  {
+    "category": "Karnataka",
+    "real_filename": "WIN_20231103_11_14_01_Pro.mp4",
+    "asset_path": "assets/sign_language/videos/Karnataka/WIN_20231103_11_14_01_Pro.mp4",
+    "data_path": "data/isl_recording/videos/Karnataka/WIN_20231103_11_14_01_Pro.mp4",
+    "total_clips_in_dataset": 60
+  },
+  {
+    "category": "Key",
+    "real_filename": "WIN_20230901_09_22_12_Pro.mp4",
+    "asset_path": "assets/sign_language/videos/Key/WIN_20230901_09_22_12_Pro.mp4",
+    "data_path": "data/isl_recording/videos/Key/WIN_20230901_09_22_12_Pro.mp4",
+    "total_clips_in_dataset": 60
+  },
+  {
+    "category": "Knife",
+    "real_filename": "WIN_20230831_12_40_43_Pro.mp4",
+    "asset_path": "assets/sign_language/videos/Knife/WIN_20230831_12_40_43_Pro.mp4",
+    "data_path": "data/isl_recording/videos/Knife/WIN_20230831_12_40_43_Pro.mp4",
+    "total_clips_in_dataset": 60
+  },
+  {
+    "category": "Lemon",
+    "real_filename": "WIN_20231102_12_03_42_Pro.mp4",
+    "asset_path": "assets/sign_language/videos/Lemon/WIN_20231102_12_03_42_Pro.mp4",
+    "data_path": "data/isl_recording/videos/Lemon/WIN_20231102_12_03_42_Pro.mp4",
+    "total_clips_in_dataset": 60
+  },
+  {
+    "category": "Lion",
+    "real_filename": "WIN_20231102_13_10_25_Pro.mp4",
+    "asset_path": "assets/sign_language/videos/Lion/WIN_20231102_13_10_25_Pro.mp4",
+    "data_path": "data/isl_recording/videos/Lion/WIN_20231102_13_10_25_Pro.mp4",
+    "total_clips_in_dataset": 60
+  },
+  {
+    "category": "Man",
+    "real_filename": "WIN_20230831_12_29_00_Pro.mp4",
+    "asset_path": "assets/sign_language/videos/Man/WIN_20230831_12_29_00_Pro.mp4",
+    "data_path": "data/isl_recording/videos/Man/WIN_20230831_12_29_00_Pro.mp4",
+    "total_clips_in_dataset": 60
+  },
+  {
+    "category": "Maths",
+    "real_filename": "WIN_20230901_09_38_10_Pro.mp4",
+    "asset_path": "assets/sign_language/videos/Maths/WIN_20230901_09_38_10_Pro.mp4",
+    "data_path": "data/isl_recording/videos/Maths/WIN_20230901_09_38_10_Pro.mp4",
+    "total_clips_in_dataset": 60
+  },
+  {
+    "category": "Maybe",
+    "real_filename": "WIN_20230901_09_17_49_Pro.mp4",
+    "asset_path": "assets/sign_language/videos/Maybe/WIN_20230901_09_17_49_Pro.mp4",
+    "data_path": "data/isl_recording/videos/Maybe/WIN_20230901_09_17_49_Pro.mp4",
+    "total_clips_in_dataset": 60
+  },
+  {
+    "category": "Monkey",
+    "real_filename": "WIN_20231102_13_15_07_Pro.mp4",
+    "asset_path": "assets/sign_language/videos/Monkey/WIN_20231102_13_15_07_Pro.mp4",
+    "data_path": "data/isl_recording/videos/Monkey/WIN_20231102_13_15_07_Pro.mp4",
+    "total_clips_in_dataset": 60
+  },
+  {
+    "category": "Onion",
+    "real_filename": "WIN_20231102_12_12_33_Pro.mp4",
+    "asset_path": "assets/sign_language/videos/Onion/WIN_20231102_12_12_33_Pro.mp4",
+    "data_path": "data/isl_recording/videos/Onion/WIN_20231102_12_12_33_Pro.mp4",
+    "total_clips_in_dataset": 60
+  },
+  {
+    "category": "Peacock",
+    "real_filename": "WIN_20231103_12_51_54_Pro.mp4",
+    "asset_path": "assets/sign_language/videos/Peacock/WIN_20231103_12_51_54_Pro.mp4",
+    "data_path": "data/isl_recording/videos/Peacock/WIN_20231103_12_51_54_Pro.mp4",
+    "total_clips_in_dataset": 60
+  },
+  {
+    "category": "Pigeon",
+    "real_filename": "WIN_20231103_12_54_54_Pro.mp4",
+    "asset_path": "assets/sign_language/videos/Pigeon/WIN_20231103_12_54_54_Pro.mp4",
+    "data_path": "data/isl_recording/videos/Pigeon/WIN_20231103_12_54_54_Pro.mp4",
+    "total_clips_in_dataset": 60
+  },
+  {
+    "category": "Pour",
+    "real_filename": "WIN_20231103_11_09_17_Pro.mp4",
+    "asset_path": "assets/sign_language/videos/Pour/WIN_20231103_11_09_17_Pro.mp4",
+    "data_path": "data/isl_recording/videos/Pour/WIN_20231103_11_09_17_Pro.mp4",
+    "total_clips_in_dataset": 60
+  },
+  {
+    "category": "Radish",
+    "real_filename": "WIN_20231102_12_26_37_Pro.mp4",
+    "asset_path": "assets/sign_language/videos/Radish/WIN_20231102_12_26_37_Pro.mp4",
+    "data_path": "data/isl_recording/videos/Radish/WIN_20231102_12_26_37_Pro.mp4",
+    "total_clips_in_dataset": 60
+  },
+  {
+    "category": "Sparrow",
+    "real_filename": "WIN_20231103_12_58_35_Pro.mp4",
+    "asset_path": "assets/sign_language/videos/Sparrow/WIN_20231103_12_58_35_Pro.mp4",
+    "data_path": "data/isl_recording/videos/Sparrow/WIN_20231103_12_58_35_Pro.mp4",
+    "total_clips_in_dataset": 60
+  },
+  {
+    "category": "Still",
+    "real_filename": "WIN_20231014_19_04_36_Pro_Trim - Copy_cropped.mp4",
+    "asset_path": "assets/sign_language/videos/Still/WIN_20231014_19_04_36_Pro_Trim - Copy_cropped.mp4",
+    "data_path": "data/isl_recording/videos/Still/WIN_20231014_19_04_36_Pro_Trim - Copy_cropped.mp4",
+    "total_clips_in_dataset": 30
+  },
+  {
+    "category": "Switch",
+    "real_filename": "WIN_20230901_09_08_23_Pro.mp4",
+    "asset_path": "assets/sign_language/videos/Switch/WIN_20230901_09_08_23_Pro.mp4",
+    "data_path": "data/isl_recording/videos/Switch/WIN_20230901_09_08_23_Pro.mp4",
+    "total_clips_in_dataset": 60
+  },
+  {
+    "category": "Tea",
+    "real_filename": "WIN_20230831_12_01_07_Pro.mp4",
+    "asset_path": "assets/sign_language/videos/Tea/WIN_20230831_12_01_07_Pro.mp4",
+    "data_path": "data/isl_recording/videos/Tea/WIN_20230831_12_01_07_Pro.mp4",
+    "total_clips_in_dataset": 60
+  },
+  {
+    "category": "Temple",
+    "real_filename": "WIN_20230831_12_12_59_Pro.mp4",
+    "asset_path": "assets/sign_language/videos/Temple/WIN_20230831_12_12_59_Pro.mp4",
+    "data_path": "data/isl_recording/videos/Temple/WIN_20230831_12_12_59_Pro.mp4",
+    "total_clips_in_dataset": 60
+  },
+  {
+    "category": "Thank you",
+    "real_filename": "WIN_20231103_13_12_51_Pro.mp4",
+    "asset_path": "assets/sign_language/videos/Thank you/WIN_20231103_13_12_51_Pro.mp4",
+    "data_path": "data/isl_recording/videos/Thank you/WIN_20231103_13_12_51_Pro.mp4",
+    "total_clips_in_dataset": 60
+  },
+  {
+    "category": "Tiger",
+    "real_filename": "WIN_20231102_13_18_43_Pro.mp4",
+    "asset_path": "assets/sign_language/videos/Tiger/WIN_20231102_13_18_43_Pro.mp4",
+    "data_path": "data/isl_recording/videos/Tiger/WIN_20231102_13_18_43_Pro.mp4",
+    "total_clips_in_dataset": 60
+  },
+  {
+    "category": "Turtle",
+    "real_filename": "WIN_20231102_13_23_44_Pro.mp4",
+    "asset_path": "assets/sign_language/videos/Turtle/WIN_20231102_13_23_44_Pro.mp4",
+    "data_path": "data/isl_recording/videos/Turtle/WIN_20231102_13_23_44_Pro.mp4",
+    "total_clips_in_dataset": 60
+  },
+  {
+    "category": "Umbrella",
+    "real_filename": "WIN_20230831_13_06_19_Pro.mp4",
+    "asset_path": "assets/sign_language/videos/Umbrella/WIN_20230831_13_06_19_Pro.mp4",
+    "data_path": "data/isl_recording/videos/Umbrella/WIN_20230831_13_06_19_Pro.mp4",
+    "total_clips_in_dataset": 60
+  },
+  {
+    "category": "Uncle",
+    "real_filename": "WIN_20230831_12_55_07_Pro.mp4",
+    "asset_path": "assets/sign_language/videos/Uncle/WIN_20230831_12_55_07_Pro.mp4",
+    "data_path": "data/isl_recording/videos/Uncle/WIN_20230831_12_55_07_Pro.mp4",
+    "total_clips_in_dataset": 60
+  },
+  {
+    "category": "Vegetables",
+    "real_filename": "WIN_20231102_10_40_49_Pro.mp4",
+    "asset_path": "assets/sign_language/videos/Vegetables/WIN_20231102_10_40_49_Pro.mp4",
+    "data_path": "data/isl_recording/videos/Vegetables/WIN_20231102_10_40_49_Pro.mp4",
+    "total_clips_in_dataset": 60
+  },
+  {
+    "category": "Volcano",
+    "real_filename": "WIN_20231103_11_28_58_Pro.mp4",
+    "asset_path": "assets/sign_language/videos/Volcano/WIN_20231103_11_28_58_Pro.mp4",
+    "data_path": "data/isl_recording/videos/Volcano/WIN_20231103_11_28_58_Pro.mp4",
+    "total_clips_in_dataset": 60
+  },
+  {
+    "category": "What is your Name",
+    "real_filename": "WIN_20230901_09_59_01_Pro.mp4",
+    "asset_path": "assets/sign_language/videos/What is your Name/WIN_20230901_09_59_01_Pro.mp4",
+    "data_path": "data/isl_recording/videos/What is your Name/WIN_20230901_09_59_01_Pro.mp4",
+    "total_clips_in_dataset": 60
+  },
+  {
+    "category": "Wife",
+    "real_filename": "WIN_20230901_08_57_39_Pro.mp4",
+    "asset_path": "assets/sign_language/videos/Wife/WIN_20230901_08_57_39_Pro.mp4",
+    "data_path": "data/isl_recording/videos/Wife/WIN_20230901_08_57_39_Pro.mp4",
+    "total_clips_in_dataset": 60
+  },
+  {
+    "category": "Writer",
+    "real_filename": "WIN_20230901_09_50_19_Pro.mp4",
+    "asset_path": "assets/sign_language/videos/Writer/WIN_20230901_09_50_19_Pro.mp4",
+    "data_path": "data/isl_recording/videos/Writer/WIN_20230901_09_50_19_Pro.mp4",
+    "total_clips_in_dataset": 60
+  },
+  {
+    "category": "Wrong",
+    "real_filename": "WIN_20230831_13_16_16_Pro.mp4",
+    "asset_path": "assets/sign_language/videos/Wrong/WIN_20230831_13_16_16_Pro.mp4",
+    "data_path": "data/isl_recording/videos/Wrong/WIN_20230831_13_16_16_Pro.mp4",
+    "total_clips_in_dataset": 60
+  }
+]

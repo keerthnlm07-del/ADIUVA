@@ -1,13 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../../../core/theme/adiuva_colors.dart';
 import '../../../../core/theme/adiuva_spacing.dart';
-import '../../../../core/widgets/custom_button.dart';
-import '../../../../core/widgets/adiuva_card.dart';
+import '../../../../core/widgets/adiuva_icon_tile.dart';
 import '../../../../config/routes/app_routes.dart';
+import '../../../auth/presentation/provider/auth_provider.dart';
 import '../widgets/home_header.dart';
-import '../widgets/feature_grid.dart';
 
-/// ADIUVA Home Dashboard Page
+/// ADIUVA Main Home Dashboard Page
+/// 
+/// Contains EXACTLY the 5 Primary User Mode Options:
+/// 1. Blind / Visual Assistance
+/// 2. Deaf / Hearing Assistance
+/// 3. Cognitive Assistance
+/// 4. Physical Assistance
+/// 5. Normal User
 class HomePage extends StatelessWidget {
   final Function(int tabIndex)? onNavigateTab;
 
@@ -16,8 +23,56 @@ class HomePage extends StatelessWidget {
     this.onNavigateTab,
   });
 
+  static const List<Map<String, dynamic>> _modeCards = [
+    {
+      'id': 'blind',
+      'title': 'Blind Assistance',
+      'subtitle': 'Visual & Voice Tools',
+      'icon': Icons.visibility_rounded,
+      'color': AdiuvaColors.primaryTeal,
+      'route': AppRoutes.blindMode,
+    },
+    {
+      'id': 'deaf',
+      'title': 'Hearing Assistance',
+      'subtitle': 'Captions & Alerts',
+      'icon': Icons.hearing_rounded,
+      'color': Colors.blue,
+      'route': AppRoutes.hearingAssistance,
+    },
+    {
+      'id': 'cognitive',
+      'title': 'Cognitive Assistance',
+      'subtitle': 'Routines & Memory',
+      'icon': Icons.psychology_rounded,
+      'color': Colors.purple,
+      'route': AppRoutes.cognitiveAssistance,
+    },
+    {
+      'id': 'physical',
+      'title': 'Physical Assistance',
+      'subtitle': 'Motor Control & Calls',
+      'icon': Icons.accessible_forward_rounded,
+      'color': Colors.teal,
+      'route': AppRoutes.physicalAssistance,
+    },
+    {
+      'id': 'normal',
+      'title': 'Normal User',
+      'subtitle': 'Universal Suite',
+      'icon': Icons.person_rounded,
+      'color': AdiuvaColors.voiceAmberDark,
+      'route': AppRoutes.normalUser,
+    },
+  ];
+
   @override
   Widget build(BuildContext context) {
+    try {
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      debugPrint('[AUTH_TRACE] home_entered uid=${authProvider.user?.userId}');
+    } catch (_) {}
+
     final theme = Theme.of(context);
 
     return SingleChildScrollView(
@@ -26,76 +81,65 @@ class HomePage extends StatelessWidget {
         children: [
           // Header: Greeting, User Name, Avatar, Status Badge
           const HomeHeader(),
-          AdiuvaSpacing.gapXl,
+          AdiuvaSpacing.gapLg,
 
-          // Primary "Talk to ADIUVA" Action Button (Sand/Amber mode)
-          CustomButton.voiceAction(
-            label: 'Talk to ADIUVA',
-            leadingIcon: Icons.mic_none_outlined,
-            semanticHint: 'Double tap to open Voice Assistant Mode',
-            onPressed: () {
-              Navigator.of(context).pushNamed(AppRoutes.voiceMode);
+          // Section Title
+          Text(
+            'Assistance Modes',
+            style: theme.textTheme.titleLarge?.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          AdiuvaSpacing.gapXs,
+          Text(
+            'Select your assistance mode:',
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+          AdiuvaSpacing.gapLg,
+
+          // 2-Column Responsive Icon Grid for 5 Primary Modes
+          GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: _modeCards.length,
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              crossAxisSpacing: AdiuvaSpacing.md,
+              mainAxisSpacing: AdiuvaSpacing.md,
+              childAspectRatio: 1.15,
+            ),
+            itemBuilder: (context, index) {
+              final mode = _modeCards[index];
+              return AdiuvaIconTile(
+                title: mode['title'] as String,
+                subtitle: mode['subtitle'] as String?,
+                icon: mode['icon'] as IconData,
+                color: mode['color'] as Color,
+                semanticLabel: 'Open ${mode['title']}',
+                onTap: () {
+                  Navigator.of(context).pushNamed(mode['route'] as String);
+                },
+              );
             },
           ),
+
           AdiuvaSpacing.gapXl,
 
-          // Assistive Tools Section Title
-          Text(
-            'Assistive Tools',
-            style: theme.textTheme.titleLarge?.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          AdiuvaSpacing.gapMd,
-
-          // Feature Grid (Vision, Read Text, Scan Code, Navigate)
-          FeatureGrid(onNavigateTab: onNavigateTab),
-          AdiuvaSpacing.gapXl,
-
-          // Recent Activity Section (Clean Empty State as per spec)
-          Text(
-            'Recent Activity',
-            style: theme.textTheme.titleLarge?.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          AdiuvaSpacing.gapMd,
-          AdiuvaCard(
-            padding: AdiuvaSpacing.paddingLg,
-            child: Row(
-              children: [
-                Icon(
-                  Icons.history_toggle_off_rounded,
-                  color: theme.colorScheme.onSurfaceVariant,
-                  size: 28,
-                ),
-                const SizedBox(width: AdiuvaSpacing.md),
-                Expanded(
-                  child: Text(
-                    'No recent activity yet. Your quick actions and assistant history will appear here.',
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          AdiuvaSpacing.gapXxl,
-
-          // Emergency Help Action Entry Point
+          // Emergency SOS Bar (Red Emergency Control)
           OutlinedButton.icon(
             style: OutlinedButton.styleFrom(
               minimumSize: const Size.fromHeight(AdiuvaSpacing.minTouchTarget),
               foregroundColor: AdiuvaColors.error,
               side: const BorderSide(color: AdiuvaColors.error, width: 2.0),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(16),
               ),
             ),
             icon: const Icon(Icons.sos_rounded, color: AdiuvaColors.error, size: 28),
             label: const Text(
-              'EMERGENCY HELP',
+              'EMERGENCY SOS',
               style: TextStyle(
                 fontWeight: FontWeight.w800,
                 letterSpacing: 1.2,
@@ -106,7 +150,9 @@ class HomePage extends StatelessWidget {
               Navigator.of(context).pushNamed(AppRoutes.emergencySos);
             },
           ),
-          AdiuvaSpacing.gapXl,
+
+          // Bottom padding to ensure GlobalVoiceFab never covers controls
+          const SizedBox(height: 80),
         ],
       ),
     );

@@ -43,10 +43,10 @@ class AppBottomNavigation extends StatelessWidget {
           tooltip: 'Vision & Camera Tools (Tab 3 of 5)',
         ),
         NavigationDestination(
-          icon: Icon(Icons.explore_outlined, size: 26),
-          selectedIcon: Icon(Icons.explore, size: 26, color: AdiuvaColors.primaryTeal),
-          label: 'Navigate',
-          tooltip: 'Navigation Helper (Tab 4 of 5)',
+          icon: Icon(Icons.my_location_outlined, size: 26),
+          selectedIcon: Icon(Icons.my_location_rounded, size: 26, color: AdiuvaColors.primaryTeal),
+          label: 'Location',
+          tooltip: 'Location Helper (Tab 4 of 5)',
         ),
         NavigationDestination(
           icon: Icon(Icons.person_outline, size: 26),

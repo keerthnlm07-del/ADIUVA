@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import '../../../../core/widgets/accessibility_scaffold.dart';
-import '../../../../config/routes/route_generator.dart';
 import '../../../speech_assistance/presentation/pages/speech_assistance_page.dart';
 import '../../../visual_assistance/presentation/pages/visual_assistance_page.dart';
 import '../../../profile/presentation/pages/profile_page.dart';
 import '../widgets/bottom_navigation.dart';
 import 'home_page.dart';
+import '../../../physical_assistance/presentation/pages/location_page.dart';
 
 /// ADIUVA Persistent Navigation Shell Container
 class NavigationShellPage extends StatefulWidget {
@@ -27,7 +27,7 @@ class _NavigationShellPageState extends State<NavigationShellPage> {
     'Home Dashboard',
     'AI Assistant',
     'Vision Tools',
-    'Navigation Helper',
+    'Location Helper',
     'Profile & Settings',
   ];
 
@@ -56,7 +56,7 @@ class _NavigationShellPageState extends State<NavigationShellPage> {
           HomePage(onNavigateTab: _onTabSelected),
           const SpeechAssistancePage(),
           const VisualAssistancePage(),
-          const PlaceholderPage(title: 'Navigation Assistant'),
+          const LocationPage(),
           const ProfilePage(),
         ],
       ),

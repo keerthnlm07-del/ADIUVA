@@ -98,7 +98,7 @@ class VisionResultSheet extends StatelessWidget {
 
               // Selectable Result Text Body
               Container(
-                constraints: const BoxConstraints(maxHeight: 220),
+                constraints: const BoxConstraints(maxHeight: 200),
                 child: SingleChildScrollView(
                   child: SelectableText(
                     result.text,
@@ -108,9 +108,144 @@ class VisionResultSheet extends StatelessWidget {
                   ),
                 ),
               ),
-              AdiuvaSpacing.gapXl,
+              AdiuvaSpacing.gapMd,
 
-              // Action Buttons Row (Read Aloud, Copy, Ask ADIUVA, Retake)
+              // Detected / Classified Object Labels
+              if (result.labels.isNotEmpty) ...[
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 6,
+                  children: result.labels.map((label) {
+                    return Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.primaryContainer,
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Text(
+                        label,
+                        style: theme.textTheme.labelMedium?.copyWith(
+                          color: theme.colorScheme.onPrimaryContainer,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                ),
+                AdiuvaSpacing.gapMd,
+              ],
+
+              // Document Multi-Page Navigation & AI Story Summary Controls
+              if (provider.hasActiveDocument) ...[
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.primaryContainer.withValues(alpha: 0.4),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Column(
+                    children: [
+                      // Page Navigation Controls Row
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Semantics(
+                            label: 'Previous Page',
+                            button: true,
+                            enabled: provider.activeDocument!.hasPreviousPage,
+                            child: IconButton(
+                              icon: const Icon(Icons.arrow_back_ios_rounded),
+                              onPressed: provider.activeDocument!.hasPreviousPage
+                                  ? () => provider.previousPage()
+                                  : null,
+                            ),
+                          ),
+                          Text(
+                            'Page ${provider.activeDocument!.currentPageIndex + 1} of ${provider.activeDocument!.totalPages}',
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: theme.colorScheme.primary,
+                            ),
+                          ),
+                          Semantics(
+                            label: 'Next Page',
+                            button: true,
+                            enabled: provider.activeDocument!.hasNextPage,
+                            child: IconButton(
+                              icon: const Icon(Icons.arrow_forward_ios_rounded),
+                              onPressed: provider.activeDocument!.hasNextPage
+                                  ? () => provider.nextPage()
+                                  : null,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const Divider(height: 12),
+
+                      // Document Playback & AI Story Summary Row
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [
+                          // Start / Pause / Resume Playback Button
+                          Semantics(
+                            label: provider.isReadingDocument
+                                ? 'Pause Reading'
+                                : (provider.isDocumentPaused ? 'Resume Reading' : 'Start Reading'),
+                            button: true,
+                            child: ElevatedButton.icon(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AdiuvaColors.primaryTeal,
+                                foregroundColor: Colors.white,
+                              ),
+                              onPressed: () {
+                                if (provider.isReadingDocument) {
+                                  provider.pauseReadingDocument();
+                                } else if (provider.isDocumentPaused) {
+                                  provider.resumeReadingDocument();
+                                } else {
+                                  provider.startReadingDocument();
+                                }
+                              },
+                              icon: Icon(
+                                provider.isReadingDocument
+                                    ? Icons.pause_rounded
+                                    : (provider.isDocumentPaused ? Icons.play_arrow_rounded : Icons.play_arrow_rounded),
+                              ),
+                              label: Text(
+                                provider.isReadingDocument
+                                    ? 'Pause'
+                                    : (provider.isDocumentPaused ? 'Resume' : 'Start Reading'),
+                              ),
+                            ),
+                          ),
+
+                          // AI Story Summary Button
+                          Semantics(
+                            label: 'What is this story about? Summarize with AI',
+                            button: true,
+                            child: OutlinedButton.icon(
+                              onPressed: provider.isSummarizingDocument
+                                  ? null
+                                  : () => provider.summarizeActiveDocument(),
+                              icon: provider.isSummarizingDocument
+                                  ? const SizedBox(
+                                      width: 16,
+                                      height: 16,
+                                      child: CircularProgressIndicator(strokeWidth: 2),
+                                    )
+                                  : const Icon(Icons.auto_awesome_rounded, color: AdiuvaColors.voiceAmber),
+                              label: const Text('Story Summary'),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                AdiuvaSpacing.gapMd,
+              ],
+
+              // Action Buttons Row (Read Aloud, Copy, Retake)
               Wrap(
                 spacing: AdiuvaSpacing.md,
                 runSpacing: AdiuvaSpacing.md,
@@ -145,11 +280,16 @@ class VisionResultSheet extends StatelessWidget {
                     },
                   ),
 
-                  // Retake Button
+                  // Retake / Clear Button
                   CustomButton.primary(
-                    label: 'Retake',
-                    leadingIcon: Icons.camera_alt_outlined,
-                    onPressed: onClose,
+                    label: provider.hasActiveDocument ? 'Close Doc' : 'Retake',
+                    leadingIcon: provider.hasActiveDocument ? Icons.close_rounded : Icons.camera_alt_outlined,
+                    onPressed: () {
+                      if (provider.hasActiveDocument) {
+                        provider.clearDocument();
+                      }
+                      onClose();
+                    },
                   ),
                 ],
               ),

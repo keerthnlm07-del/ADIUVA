@@ -141,4 +141,10 @@ abstract class AuthRepository {
   /// });
   /// ```
   Stream<UserEntity?> authStateChanges();
+
+  /// Update preferred name (nickname) for authenticated user
+  Future<BaseResponse<UserEntity>> updatePreferredName({
+    required String userId,
+    required String preferredName,
+  });
 }

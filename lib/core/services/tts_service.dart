@@ -5,7 +5,7 @@ import 'package:flutter_tts/flutter_tts.dart';
 class TtsService extends ChangeNotifier {
   final FlutterTts _flutterTts = FlutterTts();
   bool _isSpeaking = false;
-  VoidCallback? _onCompletionCallback;
+  final List<VoidCallback> _completionListeners = [];
 
   bool get isSpeaking => _isSpeaking;
 
@@ -14,7 +14,31 @@ class TtsService extends ChangeNotifier {
   }
 
   void setCompletionListener(VoidCallback onComplete) {
-    _onCompletionCallback = onComplete;
+    if (!_completionListeners.contains(onComplete)) {
+      _completionListeners.add(onComplete);
+    }
+  }
+
+  void addCompletionListener(VoidCallback onComplete) {
+    if (!_completionListeners.contains(onComplete)) {
+      _completionListeners.add(onComplete);
+    }
+  }
+
+  void removeCompletionListener(VoidCallback onComplete) {
+    _completionListeners.remove(onComplete);
+  }
+
+  void _notifyCompletionListeners() {
+    _isSpeaking = false;
+    notifyListeners();
+    for (final listener in List<VoidCallback>.from(_completionListeners)) {
+      try {
+        listener();
+      } catch (e) {
+        debugPrint('[TTS] Error invoking completion listener: $e');
+      }
+    }
   }
 
   Future<void> _initTts() async {
@@ -30,15 +54,11 @@ class TtsService extends ChangeNotifier {
       });
 
       _flutterTts.setCompletionHandler(() {
-        _isSpeaking = false;
-        notifyListeners();
-        _onCompletionCallback?.call();
+        _notifyCompletionListeners();
       });
 
       _flutterTts.setErrorHandler((msg) {
-        _isSpeaking = false;
-        notifyListeners();
-        _onCompletionCallback?.call();
+        _notifyCompletionListeners();
       });
     } catch (_) {
       // Graceful fallback if TTS engine is unavailable
@@ -57,6 +77,30 @@ class TtsService extends ChangeNotifier {
       _isSpeaking = false;
       notifyListeners();
     }
+  }
+
+  Future<void> setLanguage(String languageCode) async {
+    try {
+      await _flutterTts.setLanguage(languageCode);
+    } catch (_) {}
+  }
+
+  Future<void> setSpeechRate(double rate) async {
+    try {
+      await _flutterTts.setSpeechRate(rate);
+    } catch (_) {}
+  }
+
+  Future<void> setPitch(double pitch) async {
+    try {
+      await _flutterTts.setPitch(pitch);
+    } catch (_) {}
+  }
+
+  Future<void> setVolume(double volume) async {
+    try {
+      await _flutterTts.setVolume(volume);
+    } catch (_) {}
   }
 
   Future<void> stop() async {

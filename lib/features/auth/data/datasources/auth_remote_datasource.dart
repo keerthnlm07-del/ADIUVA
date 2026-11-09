@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
@@ -30,6 +31,7 @@ class AuthRemoteDataSource {
       );
 
       final userCredential = await _firebaseAuth.signInWithCredential(credential);
+      debugPrint('[AUTH_TRACE] google_signin_success uid=${userCredential.user?.uid}');
 
       return BaseResponse<UserCredential>.success(
         data: userCredential,

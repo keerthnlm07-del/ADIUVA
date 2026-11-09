@@ -11,6 +11,7 @@ class UserModel extends UserEntity {
     required super.userId,
     required super.email,
     required super.name,
+    super.preferredName,
     required super.userType,
     required super.disabilityTypes,
     required super.language,
@@ -22,6 +23,25 @@ class UserModel extends UserEntity {
     super.lastLoginAt,
   });
 
+  /// Create UserModel from UserEntity
+  factory UserModel.fromEntity(UserEntity entity) {
+    return UserModel(
+      userId: entity.userId,
+      email: entity.email,
+      name: entity.name,
+      preferredName: entity.preferredName,
+      userType: entity.userType,
+      disabilityTypes: entity.disabilityTypes,
+      language: entity.language,
+      isActive: entity.isActive,
+      phone: entity.phone,
+      photoUrl: entity.photoUrl,
+      createdAt: entity.createdAt,
+      updatedAt: entity.updatedAt,
+      lastLoginAt: entity.lastLoginAt,
+    );
+  }
+
   /// Create UserModel from Firestore document
   /// 
   /// Handles Firestore Timestamp conversion to milliseconds.
@@ -30,6 +50,7 @@ class UserModel extends UserEntity {
       userId: json['userId'] as String,
       email: json['email'] as String,
       name: json['name'] as String,
+      preferredName: json['preferredName'] as String?,
       userType: json['userType'] as String,
       disabilityTypes:
           List<String>.from(json['disabilityTypes'] as List<dynamic>),
@@ -53,6 +74,7 @@ class UserModel extends UserEntity {
       userId: json['userId'] as String,
       email: json['email'] as String,
       name: json['name'] as String,
+      preferredName: json['preferredName'] as String?,
       userType: json['userType'] as String,
       disabilityTypes:
           List<String>.from(json['disabilityTypes'] as List<dynamic>),
@@ -74,6 +96,7 @@ class UserModel extends UserEntity {
       'userId': userId,
       'email': email,
       'name': name,
+      if (preferredName != null) 'preferredName': preferredName,
       'userType': userType,
       'disabilityTypes': disabilityTypes,
       'language': language,
@@ -93,6 +116,7 @@ class UserModel extends UserEntity {
       'userId': userId,
       'email': email,
       'name': name,
+      if (preferredName != null) 'preferredName': preferredName,
       'userType': userType,
       'disabilityTypes': disabilityTypes,
       'language': language,
@@ -114,6 +138,7 @@ class UserModel extends UserEntity {
       userId: userId,
       email: email,
       name: name,
+      preferredName: preferredName,
       userType: userType,
       disabilityTypes: disabilityTypes,
       language: language,

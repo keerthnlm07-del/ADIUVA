@@ -49,8 +49,9 @@ class _SignupPageState extends State<SignupPage> {
     if (!mounted) return;
 
     if (authProvider.isAuthenticated) {
-      AccessibilityScaffold.announce('Account created successfully. Navigating to email verification.');
-      Navigator.of(context).pushReplacementNamed(AppRoutes.emailVerification);
+      AccessibilityScaffold.announce('Account created successfully.');
+      debugPrint('[AUTH_FINAL] route=${AppRoutes.home}');
+      Navigator.of(context).pushReplacementNamed(AppRoutes.home);
     } else if (authProvider.errorMessage != null) {
       AccessibilityScaffold.announce('Sign up failed: ${authProvider.errorMessage}');
       ErrorDialog.show(
@@ -68,7 +69,8 @@ class _SignupPageState extends State<SignupPage> {
     if (!mounted) return;
 
     if (authProvider.isAuthenticated) {
-      AccessibilityScaffold.announce('Google sign in successful. Welcome to Adiuva.');
+      AccessibilityScaffold.announce('Google sign in successful.');
+      debugPrint('[AUTH_FINAL] route=${AppRoutes.home}');
       Navigator.of(context).pushReplacementNamed(AppRoutes.home);
     } else if (authProvider.errorMessage != null &&
         !authProvider.errorMessage!.contains('cancelled')) {

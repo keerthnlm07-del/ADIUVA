@@ -17,16 +17,24 @@ import 'config/routes/route_generator.dart';
 import 'features/auth/presentation/provider/auth_provider.dart';
 import 'features/speech_assistance/presentation/provider/speech_assistance_provider.dart';
 import 'features/speech_assistance/presentation/provider/voice_mode_provider.dart';
+import 'features/speech_assistance/presentation/provider/global_voice_control_provider.dart';
 import 'features/visual_assistance/presentation/provider/visual_assistance_provider.dart';
 import 'features/accessibility/presentation/provider/accessibility_provider.dart';
 import 'features/emergency_sos/presentation/provider/emergency_sos_provider.dart';
+import 'features/speech_assistance/presentation/widgets/global_voice_overlay.dart';
+import 'features/cognitive_assistance/presentation/provider/todo_provider.dart';
+import 'features/cognitive_assistance/presentation/provider/reminder_provider.dart';
+import 'features/cognitive_assistance/presentation/provider/notes_provider.dart';
+import 'features/physical_assistance/presentation/provider/physical_assistance_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  debugPrint('[AUTH_TRACE] app_start');
 
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+  debugPrint('[AUTH_TRACE] firebase_initialized');
 
   // Configure App Check: AndroidDebugProvider in debug mode, AndroidPlayIntegrityProvider in release
   await FirebaseAppCheck.instance.activate(
@@ -75,10 +83,26 @@ class AdiuvaApp extends StatelessWidget {
         ChangeNotifierProvider<VisualAssistanceProvider>(
           create: (_) => sl<VisualAssistanceProvider>(),
         ),
+        ChangeNotifierProvider<GlobalVoiceControlProvider>(
+          create: (_) => sl<GlobalVoiceControlProvider>(),
+        ),
+        ChangeNotifierProvider<TodoProvider>(
+          create: (_) => sl<TodoProvider>(),
+        ),
+        ChangeNotifierProvider<ReminderProvider>(
+          create: (_) => sl<ReminderProvider>(),
+        ),
+        ChangeNotifierProvider<NotesProvider>(
+          create: (_) => sl<NotesProvider>(),
+        ),
+        ChangeNotifierProvider<PhysicalAssistanceProvider>(
+          create: (_) => sl<PhysicalAssistanceProvider>(),
+        ),
       ],
       child: Consumer<AccessibilityProvider>(
         builder: (context, settings, child) {
           return MaterialApp(
+            navigatorKey: AppRoutes.navigatorKey,
             debugShowCheckedModeBanner: false,
             title: 'Adiuva',
             theme: settings.isHighContrast
@@ -90,9 +114,26 @@ class AdiuvaApp extends StatelessWidget {
             themeMode: settings.themeMode,
             initialRoute: AppRoutes.splash,
             onGenerateRoute: RouteGenerator.generateRoute,
+            builder: (context, child) => _GlobalVoiceHost(child: child ?? const SizedBox.shrink()),
           );
         },
       ),
+    );
+  }
+}
+
+/// Host widget for Global Voice wrapper
+class _GlobalVoiceHost extends StatelessWidget {
+  final Widget child;
+  const _GlobalVoiceHost({required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      children: [
+        child,
+        const GlobalVoiceOverlay(),
+      ],
     );
   }
 }

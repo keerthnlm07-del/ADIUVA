@@ -26,15 +26,19 @@ class AuthLocalDataSource {
   final LocalStorageService _localStorageService;
 
   /// Storage keys
-  static const String _keyUserId = 'auth_user_id';
-  static const String _keyUserEmail = 'auth_user_email';
-  static const String _keyUserName = 'auth_user_name';
-  static const String _keyUserType = 'auth_user_type';
-  static const String _keyDisabilityTypes = 'auth_disability_types';
-  static const String _keyUserLanguage = 'auth_language';
-  static const String _keyCachedUser = 'auth_cached_user_json';
-  static const String _keyOnboardingCompleted = 'onboarding_completed';
+  static const String _keyActiveUserId = 'auth_active_user_id';
   static const String _keyUserLoggedIn = 'user_logged_in';
+  static const String _keyOnboardingCompleted = 'onboarding_completed';
+
+  /// UID-scoped key generators
+  String _keyUserId(String uid) => 'auth_user_id_$uid';
+  String _keyUserEmail(String uid) => 'auth_user_email_$uid';
+  String _keyUserName(String uid) => 'auth_user_name_$uid';
+  String _keyPreferredName(String uid) => 'auth_preferred_name_$uid';
+  String _keyUserType(String uid) => 'auth_user_type_$uid';
+  String _keyDisabilityTypes(String uid) => 'auth_disability_types_$uid';
+  String _keyUserLanguage(String uid) => 'auth_language_$uid';
+  String _keyCachedUser(String uid) => 'auth_cached_user_json_$uid';
 
   AuthLocalDataSource({required LocalStorageService localStorageService})
       : _localStorageService = localStorageService;
@@ -42,39 +46,44 @@ class AuthLocalDataSource {
   /// Save user data locally after successful authentication
   /// 
   /// Stores user profile data for quick access and offline support.
-  /// Also stores JSON version for complete cached user data.
-  /// 
-  /// Parameters:
-  /// - [user] - UserModel to save
-  /// 
-  /// Returns:
-  /// - [Future<void>] completes when data is saved
-  /// 
-  /// Throws:
-  /// - [ApiException] - If storage operation fails
-  /// 
-  /// Example:
-  /// ```dart
-  /// final user = UserModel.fromFirestore(firestoreData);
-  /// await localDataSource.saveUserLocally(user);
-  /// ```
+  /// Keys are strictly UID-scoped to prevent user profile leakage.
   Future<void> saveUserLocally(UserModel user) async {
     try {
-      // Save individual fields for quick access
+      final uid = user.userId;
+      if (uid.isEmpty) return;
+
+      String? prefName = user.preferredName;
+      if (prefName == null || prefName.trim().isEmpty) {
+        final existingPrefName = await _localStorageService.getString(_keyPreferredName(uid));
+        if (existingPrefName != null && existingPrefName.trim().isNotEmpty) {
+          prefName = existingPrefName.trim();
+        }
+      }
+
+      final effectiveUser = (prefName != null && prefName != user.preferredName)
+          ? UserModel.fromEntity(user.copyWith(preferredName: prefName))
+          : user;
+
+      // Save pointer to active user
+      await _localStorageService.saveString(_keyActiveUserId, uid);
+
+      // Save individual fields for quick access, UID-scoped
       await Future.wait([
-        _localStorageService.saveString(_keyUserId, user.userId),
-        _localStorageService.saveString(_keyUserEmail, user.email),
-        _localStorageService.saveString(_keyUserName, user.name),
-        _localStorageService.saveString(_keyUserType, user.userType),
+        _localStorageService.saveString(_keyUserId(uid), effectiveUser.userId),
+        _localStorageService.saveString(_keyUserEmail(uid), effectiveUser.email),
+        _localStorageService.saveString(_keyUserName(uid), effectiveUser.name),
+        if (effectiveUser.preferredName != null && effectiveUser.preferredName!.trim().isNotEmpty)
+          _localStorageService.saveString(_keyPreferredName(uid), effectiveUser.preferredName!.trim()),
+        _localStorageService.saveString(_keyUserType(uid), effectiveUser.userType),
         _localStorageService.saveStringList(
-          _keyDisabilityTypes,
-          user.disabilityTypes,
+          _keyDisabilityTypes(uid),
+          effectiveUser.disabilityTypes,
         ),
-        _localStorageService.saveString(_keyUserLanguage, user.language),
+        _localStorageService.saveString(_keyUserLanguage(uid), effectiveUser.language),
         // Save complete user JSON for reconstruction
         _localStorageService.saveString(
-          _keyCachedUser,
-          jsonEncode(user.toJson()),
+          _keyCachedUser(uid),
+          jsonEncode(effectiveUser.toJson()),
         ),
         // Mark user as logged in
         _localStorageService.saveBool(_keyUserLoggedIn, true),
@@ -87,34 +96,48 @@ class AuthLocalDataSource {
     }
   }
 
-  /// Load cached user from local storage
-  /// 
-  /// Retrieves previously cached user data.
-  /// Returns null if no user is cached.
-  /// 
-  /// Returns:
-  /// - [UserModel?] - Cached user or null if not found
-  /// 
-  /// Throws:
-  /// - [ApiException] - If storage operation fails
-  /// 
-  /// Example:
-  /// ```dart
-  /// final cachedUser = await localDataSource.getCachedUser();
-  /// if (cachedUser != null) {
-  ///   print('Loaded cached user: ${cachedUser.email}');
-  /// }
-  /// ```
-  Future<UserModel?> getCachedUser() async {
+  /// Load cached user from local storage for active user or specified UID
+  Future<UserModel?> getCachedUser({String? targetUid}) async {
     try {
-      final cachedJson = await _localStorageService.getString(_keyCachedUser);
+      final uid = targetUid ?? await getCachedUserId();
+      if (uid == null || uid.isEmpty) {
+        return null;
+      }
+
+      final cachedJson = await _localStorageService.getString(_keyCachedUser(uid));
+      final storedPrefName = await _localStorageService.getString(_keyPreferredName(uid));
+
       if (cachedJson == null || cachedJson.isEmpty) {
+        if (storedPrefName != null && storedPrefName.trim().isNotEmpty) {
+          final email = await getCachedUserEmail(targetUid: uid) ?? '';
+          final name = await _localStorageService.getString(_keyUserName(uid)) ?? 'User';
+          return UserModel(
+            userId: uid,
+            email: email,
+            name: name,
+            preferredName: storedPrefName.trim(),
+            userType: 'normal',
+            disabilityTypes: const <String>[],
+            language: 'en',
+            isActive: true,
+            createdAt: DateTime.now().millisecondsSinceEpoch,
+            updatedAt: DateTime.now().millisecondsSinceEpoch,
+          );
+        }
         return null;
       }
 
       // Decode JSON and reconstruct UserModel
       final json = jsonDecode(cachedJson) as Map<String, dynamic>;
-      return UserModel.fromJson(json);
+      final model = UserModel.fromJson(json);
+
+      if ((model.preferredName == null || model.preferredName!.trim().isEmpty) &&
+          storedPrefName != null &&
+          storedPrefName.trim().isNotEmpty) {
+        return UserModel.fromEntity(model.copyWith(preferredName: storedPrefName.trim()));
+      }
+
+      return model;
     } catch (e) {
       throw ApiException.unknown(
         'Failed to load cached user',
@@ -123,18 +146,10 @@ class AuthLocalDataSource {
     }
   }
 
-  /// Get cached user ID
-  /// 
-  /// Quick access to user ID without loading full user object.
-  /// 
-  /// Returns:
-  /// - [String?] - User ID or null if not found
-  /// 
-  /// Throws:
-  /// - [ApiException] - If storage operation fails
+  /// Get active cached user ID
   Future<String?> getCachedUserId() async {
     try {
-      return await _localStorageService.getString(_keyUserId);
+      return await _localStorageService.getString(_keyActiveUserId);
     } catch (e) {
       throw ApiException.unknown(
         'Failed to get user ID',
@@ -143,18 +158,12 @@ class AuthLocalDataSource {
     }
   }
 
-  /// Get cached user email
-  /// 
-  /// Quick access to user email without loading full user object.
-  /// 
-  /// Returns:
-  /// - [String?] - User email or null if not found
-  /// 
-  /// Throws:
-  /// - [ApiException] - If storage operation fails
-  Future<String?> getCachedUserEmail() async {
+  /// Get cached user email for active user or specified UID
+  Future<String?> getCachedUserEmail({String? targetUid}) async {
     try {
-      return await _localStorageService.getString(_keyUserEmail);
+      final uid = targetUid ?? await getCachedUserId();
+      if (uid == null || uid.isEmpty) return null;
+      return await _localStorageService.getString(_keyUserEmail(uid));
     } catch (e) {
       throw ApiException.unknown(
         'Failed to get user email',
@@ -164,20 +173,6 @@ class AuthLocalDataSource {
   }
 
   /// Check if user is logged in locally
-  /// 
-  /// Returns true if user data is cached locally.
-  /// This is a quick check; actual Firebase auth state may differ.
-  /// 
-  /// Returns:
-  /// - [bool] - true if user is logged in locally, false otherwise
-  /// 
-  /// Throws:
-  /// - [ApiException] - If storage operation fails
-  /// 
-  /// Example:
-  /// ```dart
-  /// final isLoggedIn = await localDataSource.isUserLoggedIn();
-  /// ```
   Future<bool> isUserLoggedIn() async {
     try {
       final isLoggedIn =
@@ -192,14 +187,6 @@ class AuthLocalDataSource {
   }
 
   /// Check if onboarding is completed
-  /// 
-  /// Returns true if user has completed onboarding.
-  /// 
-  /// Returns:
-  /// - [bool] - true if onboarding completed, false otherwise
-  /// 
-  /// Throws:
-  /// - [ApiException] - If storage operation fails
   Future<bool> isOnboardingCompleted() async {
     try {
       final completed =
@@ -214,14 +201,6 @@ class AuthLocalDataSource {
   }
 
   /// Mark onboarding as completed
-  /// 
-  /// Sets onboarding completion flag.
-  /// 
-  /// Returns:
-  /// - [Future<void>] completes when flag is saved
-  /// 
-  /// Throws:
-  /// - [ApiException] - If storage operation fails
   Future<void> markOnboardingCompleted() async {
     try {
       await _localStorageService.saveBool(_keyOnboardingCompleted, true);
@@ -233,32 +212,21 @@ class AuthLocalDataSource {
     }
   }
 
-  /// Clear all user data from local storage
-  /// 
-  /// Removes all cached user data.
-  /// Typically called on logout.
-  /// 
-  /// Returns:
-  /// - [Future<void>] completes when data is cleared
-  /// 
-  /// Throws:
-  /// - [ApiException] - If storage operation fails
-  /// 
-  /// Example:
-  /// ```dart
-  /// await localDataSource.clearUserData();
-  /// ```
+  /// Clear active session pointers from local storage
   Future<void> clearUserData() async {
     try {
+      final activeUid = await getCachedUserId();
       await Future.wait([
-        _localStorageService.remove(_keyUserId),
-        _localStorageService.remove(_keyUserEmail),
-        _localStorageService.remove(_keyUserName),
-        _localStorageService.remove(_keyUserType),
-        _localStorageService.remove(_keyDisabilityTypes),
-        _localStorageService.remove(_keyUserLanguage),
-        _localStorageService.remove(_keyCachedUser),
+        _localStorageService.remove(_keyActiveUserId),
         _localStorageService.saveBool(_keyUserLoggedIn, false),
+        if (activeUid != null && activeUid.isNotEmpty) ...[
+          _localStorageService.remove(_keyUserId(activeUid)),
+          _localStorageService.remove(_keyUserEmail(activeUid)),
+          _localStorageService.remove(_keyUserName(activeUid)),
+          _localStorageService.remove(_keyUserType(activeUid)),
+          _localStorageService.remove(_keyDisabilityTypes(activeUid)),
+          _localStorageService.remove(_keyUserLanguage(activeUid)),
+        ],
       ]);
     } catch (e) {
       throw ApiException.unknown(
@@ -268,19 +236,13 @@ class AuthLocalDataSource {
     }
   }
 
-  /// Get user's preferred language
-  /// 
-  /// Returns language code or default 'en'.
-  /// 
-  /// Returns:
-  /// - [String] - Language code (e.g., 'en', 'es')
-  /// 
-  /// Throws:
-  /// - [ApiException] - If storage operation fails
-  Future<String> getUserLanguage() async {
+  /// Get user's preferred language for active user or specified UID
+  Future<String> getUserLanguage({String? targetUid}) async {
     try {
+      final uid = targetUid ?? await getCachedUserId();
+      if (uid == null || uid.isEmpty) return 'en';
       final language =
-          await _localStorageService.getString(_keyUserLanguage);
+          await _localStorageService.getString(_keyUserLanguage(uid));
       return language ?? 'en';
     } catch (e) {
       throw ApiException.unknown(
@@ -290,19 +252,12 @@ class AuthLocalDataSource {
     }
   }
 
-  /// Save user's preferred language
-  /// 
-  /// Parameters:
-  /// - [language] - Language code (e.g., 'en', 'es')
-  /// 
-  /// Returns:
-  /// - [Future<void>] completes when language is saved
-  /// 
-  /// Throws:
-  /// - [ApiException] - If storage operation fails
-  Future<void> saveUserLanguage(String language) async {
+  /// Save user's preferred language for active user or specified UID
+  Future<void> saveUserLanguage(String language, {String? targetUid}) async {
     try {
-      await _localStorageService.saveString(_keyUserLanguage, language);
+      final uid = targetUid ?? await getCachedUserId();
+      if (uid == null || uid.isEmpty) return;
+      await _localStorageService.saveString(_keyUserLanguage(uid), language);
     } catch (e) {
       throw ApiException.unknown(
         'Failed to save user language',

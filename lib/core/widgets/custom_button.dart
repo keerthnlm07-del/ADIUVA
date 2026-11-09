@@ -220,10 +220,10 @@ class CustomButton extends StatelessWidget {
         ),
         child: SizedBox(
           width: width,
-          height: AdiuvaSpacing.minTouchTarget,
           child: ElevatedButton(
             onPressed: isLoading ? null : onPressed,
             style: ElevatedButton.styleFrom(
+              minimumSize: Size(width ?? 88.0, AdiuvaSpacing.minTouchTarget),
               backgroundColor: backgroundColor,
               foregroundColor: foregroundColor,
               elevation: variant == AdiuvaButtonVariant.ghost ||
@@ -237,8 +237,8 @@ class CustomButton extends StatelessWidget {
                 side: borderSide,
               ),
               padding: const EdgeInsets.symmetric(
-                horizontal: AdiuvaSpacing.xl,
-                vertical: AdiuvaSpacing.md,
+                horizontal: AdiuvaSpacing.lg,
+                vertical: AdiuvaSpacing.sm,
               ),
             ),
             child: content,

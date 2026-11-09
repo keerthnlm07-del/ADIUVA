@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:tflite_flutter/tflite_flutter.dart';
 import 'package:image/image.dart' as img;
+import 'adiuva_object_classifier_service.dart';
 
 /// Detected Object Bounding Box Entity
 class DetectedObjectBox {
@@ -23,6 +24,15 @@ class DetectedObjectBox {
     required this.right,
     required this.bottom,
   });
+
+  /// Verified spatial direction from horizontal bounding box coordinates.
+  /// Only returns left or right when horizontal center is clearly off-center.
+  SpatialDirection get spatialDirection {
+    final double cx = (left + right) / 2.0;
+    if (cx < 0.35) return SpatialDirection.left;
+    if (cx > 0.65) return SpatialDirection.right;
+    return SpatialDirection.ahead;
+  }
 }
 
 class _LetterboxParams {
@@ -349,7 +359,8 @@ class YoloTfliteService {
     _LetterboxParams params,
   ) {
     final List<DetectedObjectBox> rawBoxes = [];
-    const double confidenceThreshold = 0.35;
+    const double confidenceThreshold = 0.55;
+    const double minBoxArea = 0.03; // Ignore tiny background noise boxes (< 3% of view)
     final int numClasses = _labels.isNotEmpty ? _labels.length : 80;
 
     final bool isChannelsFirst = shape.length == 3 && shape[1] < shape[2]; // [1, 84, 2100]
@@ -392,6 +403,9 @@ class YoloTfliteService {
         final double top = ((pixelTop - params.padY) / params.hScaled).clamp(0.0, 1.0);
         final double right = ((pixelRight - params.padX) / params.wScaled).clamp(0.0, 1.0);
         final double bottom = ((pixelBottom - params.padY) / params.hScaled).clamp(0.0, 1.0);
+
+        final double boxArea = (right - left) * (bottom - top);
+        if (boxArea < minBoxArea) continue;
 
         final String label = bestClassIdx < _labels.length ? _labels[bestClassIdx] : 'object';
 

@@ -79,53 +79,97 @@ class AuthProvider extends ChangeNotifier {
     return null;
   }
 
+  bool _isInitializing = false;
+
   /// Initialize authentication state
   /// 
   /// Checks if user is already logged in.
   /// Listens to authentication state changes.
   Future<void> _initializeAuth() async {
+    _isInitializing = true;
     _state = const AuthLoading();
     notifyListeners();
 
-    try {
-      // Check current authentication status
-      final response = await _authRepository.getCurrentUser();
+    debugPrint('[AUTH_TRACE] waiting_for_auth_state');
 
-      if (response.isSuccess && response.data != null) {
-        // User is already logged in
-        _state = AuthAuthenticated(user: response.data!);
-      } else {
-        // No user logged in
-        _state = const AuthUnauthenticated();
-      }
-    } catch (e) {
-      _state = const AuthUnauthenticated();
-    }
-
-    notifyListeners();
-
-    // Listen to authentication state changes
+    // Start listening to authentication state changes first
     _listenToAuthStateChanges();
+
+    try {
+      final response = await _authRepository.getCurrentUser();
+      if (response.isSuccess && response.data != null) {
+        _isInitializing = false;
+        _state = AuthAuthenticated(user: response.data!);
+        final uid = response.data!.userId;
+        final prefName = response.data!.preferredName ?? '';
+        debugPrint('[AUTH_TRACE] current_user=$uid');
+        debugPrint('[AUTH_TRACE] session_restored');
+        debugPrint('[AUTH_TRACE] loading_profile');
+        debugPrint('[AUTH_TRACE] preferred_name=$prefName');
+        notifyListeners();
+        return;
+      }
+    } catch (_) {}
+
+    debugPrint('[AUTH_TRACE] current_user=null (awaiting session restoration)');
+
+    // Await Firebase Auth session restoration stream event (5000ms window for cold boot)
+    try {
+      final restoredUser = await _authRepository
+          .authStateChanges()
+          .firstWhere((u) => u != null)
+          .timeout(const Duration(milliseconds: 5000));
+      if (restoredUser != null) {
+        _isInitializing = false;
+        _state = AuthAuthenticated(user: restoredUser);
+        final uid = restoredUser.userId;
+        final prefName = restoredUser.preferredName ?? '';
+        debugPrint('[AUTH_TRACE] current_user=$uid');
+        debugPrint('[AUTH_TRACE] session_restored');
+        debugPrint('[AUTH_TRACE] loading_profile');
+        debugPrint('[AUTH_TRACE] preferred_name=$prefName');
+        notifyListeners();
+        return;
+      }
+    } catch (_) {}
+
+    _isInitializing = false;
+    _state = const AuthUnauthenticated();
+    debugPrint('[AUTH_TRACE] current_user=null');
+    debugPrint('[AUTH_TRACE] login_required');
+    notifyListeners();
   }
 
   /// Check and await authentication state resolution
   Future<bool> checkAuthStatus() async {
-    if (_state is AuthLoading || _state is AuthInitial) {
+    if (_state is AuthAuthenticated) {
+      return true;
+    }
+
+    if (_state is AuthLoading || _state is AuthInitial || _isInitializing) {
       int count = 0;
-      while ((_state is AuthLoading || _state is AuthInitial) && count < 30) {
+      while ((_state is AuthLoading || _state is AuthInitial || _isInitializing) && count < 50) {
         await Future.delayed(const Duration(milliseconds: 100));
         count++;
       }
+    }
+
+    if (_state is AuthAuthenticated) {
+      return true;
     }
 
     // Direct fallback check via repository
     try {
       final response = await _authRepository.getCurrentUser();
       if (response.isSuccess && response.data != null) {
-        if (_state is! AuthAuthenticated) {
-          _state = AuthAuthenticated(user: response.data!);
-          notifyListeners();
-        }
+        _state = AuthAuthenticated(user: response.data!);
+        final uid = response.data!.userId;
+        final prefName = response.data!.preferredName ?? '';
+        debugPrint('[AUTH_TRACE] current_user=$uid');
+        debugPrint('[AUTH_TRACE] session_restored');
+        debugPrint('[AUTH_TRACE] loading_profile');
+        debugPrint('[AUTH_TRACE] preferred_name=$prefName');
+        notifyListeners();
         return true;
       }
     } catch (_) {}
@@ -142,15 +186,21 @@ class AuthProvider extends ChangeNotifier {
     _authStateSubscription = _authRepository.authStateChanges().listen(
       (user) {
         if (user != null) {
+          _isInitializing = false;
           _state = AuthAuthenticated(user: user);
-        } else {
+          debugPrint('[AUTH_TRACE] auth_state=authenticated (stream) uid=${user.userId}');
+          notifyListeners();
+        } else if (!_isInitializing) {
           _state = const AuthUnauthenticated();
+          debugPrint('[AUTH_TRACE] auth_state=unauthenticated (stream)');
+          notifyListeners();
         }
-        notifyListeners();
       },
       onError: (error) {
-        _state = AuthError(message: 'Authentication error: $error');
-        notifyListeners();
+        if (!_isInitializing) {
+          _state = AuthError(message: 'Authentication error: $error');
+          notifyListeners();
+        }
       },
     );
   }
@@ -240,6 +290,8 @@ class AuthProvider extends ChangeNotifier {
 
   /// Logout current user
   Future<void> logout() async {
+    debugPrint('[AUTH_FINAL] signout');
+    _isInitializing = false;
     _state = const AuthLoading();
     notifyListeners();
 
@@ -284,6 +336,40 @@ class AuthProvider extends ChangeNotifier {
     }
 
     notifyListeners();
+  }
+
+  /// Update preferred nickname/name for authenticated user
+  Future<bool> updatePreferredName(String preferredName) async {
+    final currentUser = user;
+    if (currentUser == null || currentUser.userId.isEmpty) {
+      return false;
+    }
+
+    try {
+      final response = await _authRepository.updatePreferredName(
+        userId: currentUser.userId,
+        preferredName: preferredName,
+      );
+
+      debugPrint('[AUTH_FINAL] nicknameSaved uid=${currentUser.userId} preferredName=${preferredName.trim()}');
+
+      if (response.isSuccess && response.data != null) {
+        _state = AuthAuthenticated(user: response.data!);
+        notifyListeners();
+        return true;
+      } else {
+        // Fallback: update local user entity copy
+        final updatedUser = currentUser.copyWith(preferredName: preferredName.trim());
+        _state = AuthAuthenticated(user: updatedUser);
+        notifyListeners();
+        return true;
+      }
+    } catch (_) {
+      final updatedUser = currentUser.copyWith(preferredName: preferredName.trim());
+      _state = AuthAuthenticated(user: updatedUser);
+      notifyListeners();
+      return true;
+    }
   }
 
   /// Clear error state

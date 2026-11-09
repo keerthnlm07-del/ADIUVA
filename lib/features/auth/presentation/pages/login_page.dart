@@ -44,7 +44,8 @@ class _LoginPageState extends State<LoginPage> {
     if (!mounted) return;
 
     if (authProvider.isAuthenticated) {
-      AccessibilityScaffold.announce('Login successful. Navigating to home screen.');
+      AccessibilityScaffold.announce('Login successful.');
+      debugPrint('[AUTH_FINAL] route=${AppRoutes.home}');
       Navigator.of(context).pushReplacementNamed(AppRoutes.home);
     } else if (authProvider.errorMessage != null) {
       AccessibilityScaffold.announce('Login failed: ${authProvider.errorMessage}');
@@ -63,7 +64,8 @@ class _LoginPageState extends State<LoginPage> {
     if (!mounted) return;
 
     if (authProvider.isAuthenticated) {
-      AccessibilityScaffold.announce('Google sign in successful. Welcome to Adiuva.');
+      AccessibilityScaffold.announce('Google sign in successful.');
+      debugPrint('[AUTH_FINAL] route=${AppRoutes.home}');
       Navigator.of(context).pushReplacementNamed(AppRoutes.home);
     } else if (authProvider.errorMessage != null &&
         !authProvider.errorMessage!.contains('cancelled')) {

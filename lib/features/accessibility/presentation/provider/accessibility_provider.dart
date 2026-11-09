@@ -24,7 +24,7 @@ class AccessibilityProvider extends ChangeNotifier {
 
   // Language & Locale Settings
   String _appLanguage = 'en';
-  String _speechLocale = 'en-US';
+  String _speechLocale = 'en-IN';
 
   // Theme Settings
   ThemeMode _themeMode = ThemeMode.system;
@@ -77,6 +77,10 @@ class AccessibilityProvider extends ChangeNotifier {
 
       _appLanguage = (await _localStorageService.getString('app_language')) ?? 'en';
       _speechLocale = (await _localStorageService.getString('speech_locale')) ?? 'en-US';
+      await _ttsService.setLanguage(_speechLocale);
+      await _ttsService.setSpeechRate(_speechRate);
+      await _ttsService.setPitch(_speechPitch);
+      await _ttsService.setVolume(_speechVolume);
       
       final themeStr = await _localStorageService.getString('theme_mode');
       if (themeStr == 'light') {
@@ -147,30 +151,58 @@ class AccessibilityProvider extends ChangeNotifier {
   Future<void> setSpeechRate(double value) async {
     _speechRate = value;
     await _localStorageService.saveDouble('speech_rate', value);
+    await _ttsService.setSpeechRate(value);
     notifyListeners();
   }
 
   Future<void> setSpeechPitch(double value) async {
     _speechPitch = value;
     await _localStorageService.saveDouble('speech_pitch', value);
+    await _ttsService.setPitch(value);
     notifyListeners();
   }
 
   Future<void> setSpeechVolume(double value) async {
     _speechVolume = value;
     await _localStorageService.saveDouble('speech_volume', value);
+    await _ttsService.setVolume(value);
     notifyListeners();
   }
 
   Future<void> setAppLanguage(String languageCode) async {
     _appLanguage = languageCode;
     await _localStorageService.saveString('app_language', languageCode);
+
+    // Auto-map language code to speech locale
+    String speechLocale = 'en-US';
+    switch (languageCode.toLowerCase()) {
+      case 'hi':
+        speechLocale = 'hi-IN';
+        break;
+      case 'kn':
+        speechLocale = 'kn-IN';
+        break;
+      case 'te':
+        speechLocale = 'te-IN';
+        break;
+      case 'ta':
+        speechLocale = 'ta-IN';
+        break;
+      case 'en':
+      default:
+        speechLocale = 'en-US';
+        break;
+    }
+    _speechLocale = speechLocale;
+    await _localStorageService.saveString('speech_locale', speechLocale);
+    await _ttsService.setLanguage(speechLocale);
     notifyListeners();
   }
 
   Future<void> setSpeechLocale(String locale) async {
     _speechLocale = locale;
     await _localStorageService.saveString('speech_locale', locale);
+    await _ttsService.setLanguage(locale);
     notifyListeners();
   }
 

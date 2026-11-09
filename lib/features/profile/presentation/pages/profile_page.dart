@@ -64,6 +64,10 @@ class ProfilePage extends StatelessWidget {
     final authProvider = Provider.of<AuthProvider>(context);
     final user = authProvider.user;
     final userName = user?.name.trim() ?? 'User';
+    final preferredName = user?.preferredName?.trim();
+    final displayName = (preferredName != null && preferredName.isNotEmpty)
+        ? '$userName ($preferredName)'
+        : userName;
     final userEmail = user?.email ?? 'No email provided';
     final userType = user?.userType.replaceAll('_', ' ').toUpperCase() ?? 'ACCESSIBILITY USER';
 
@@ -96,7 +100,7 @@ class ProfilePage extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          userName,
+                          displayName,
                           style: theme.textTheme.titleLarge?.copyWith(
                             fontWeight: FontWeight.bold,
                             color: theme.colorScheme.onPrimaryContainer,
@@ -133,6 +137,25 @@ class ProfilePage extends StatelessWidget {
                   ),
                 ],
               ),
+            ),
+            AdiuvaSpacing.gapXl,
+
+            // Personalization Section
+            Text(
+              'Personalization',
+              style: theme.textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            AdiuvaSpacing.gapMd,
+            _buildSettingsTile(
+              context: context,
+              icon: Icons.face_rounded,
+              title: 'Preferred Name / Nickname',
+              subtitle: (preferredName != null && preferredName.isNotEmpty)
+                  ? 'Currently set to "$preferredName"'
+                  : 'Tap to set what ADIUVA calls you',
+              onTap: () => _showEditNicknameDialog(context, authProvider, preferredName ?? ''),
             ),
             AdiuvaSpacing.gapXl,
 
@@ -233,6 +256,54 @@ class ProfilePage extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+
+  void _showEditNicknameDialog(
+    BuildContext context,
+    AuthProvider authProvider,
+    String currentName,
+  ) {
+    final controller = TextEditingController(text: currentName);
+    showDialog(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: const Text('Edit Preferred Name'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('What should ADIUVA call you?'),
+              const SizedBox(height: 12),
+              TextField(
+                controller: controller,
+                autofocus: true,
+                textCapitalization: TextCapitalization.words,
+                decoration: const InputDecoration(
+                  labelText: 'Preferred Name / Nickname',
+                  hintText: 'e.g. Keerth, Kiki, Keeru',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                final newName = controller.text.trim();
+                Navigator.of(dialogContext).pop();
+                await authProvider.updatePreferredName(newName);
+              },
+              child: const Text('Save'),
+            ),
+          ],
+        );
+      },
     );
   }
 }

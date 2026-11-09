@@ -6,9 +6,12 @@ import '../../../../core/widgets/accessibility_scaffold.dart';
 import '../../../../core/widgets/custom_button.dart';
 import '../../../../core/widgets/adiuva_card.dart';
 import '../provider/visual_assistance_provider.dart';
+import '../../domain/entities/vision_result.dart';
 import '../widgets/camera_preview.dart';
 import '../widgets/vision_controls.dart';
 import '../widgets/vision_result_sheet.dart';
+
+import '../widgets/document_preview_widget.dart';
 
 /// ADIUVA Visual Assistance Suite Page
 class VisualAssistancePage extends StatefulWidget {
@@ -18,16 +21,41 @@ class VisualAssistancePage extends StatefulWidget {
   State<VisualAssistancePage> createState() => _VisualAssistancePageState();
 }
 
-class _VisualAssistancePageState extends State<VisualAssistancePage> {
+class _VisualAssistancePageState extends State<VisualAssistancePage> with WidgetsBindingObserver {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final provider = Provider.of<VisualAssistanceProvider>(context, listen: false);
       if (provider.state == VisionStateEnum.idle) {
         provider.initializeCamera();
       }
     });
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    if (!mounted) return;
+    final provider = Provider.of<VisualAssistanceProvider>(context, listen: false);
+    if (state == AppLifecycleState.paused || state == AppLifecycleState.inactive) {
+      provider.stopContinuousMonitoring();
+    } else if (state == AppLifecycleState.resumed) {
+      if (provider.currentMode == VisionMode.identifyObject && provider.isCameraReady) {
+        provider.startContinuousMonitoring();
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    try {
+      final provider = Provider.of<VisualAssistanceProvider>(context, listen: false);
+      provider.stopContinuousMonitoring();
+    } catch (_) {}
+    super.dispose();
   }
 
   @override
@@ -44,14 +72,20 @@ class _VisualAssistancePageState extends State<VisualAssistancePage> {
             child: CameraPreviewWidget(provider: provider),
           ),
 
+          // 1B. Document Visual Preview (PDF / Image) when a document is loaded
+          if (provider.hasActiveDocument)
+            Positioned.fill(
+              child: DocumentPreviewWidget(provider: provider),
+            ),
+
           // 2. Permission Denied View
-          if (provider.state == VisionStateEnum.permissionDenied)
+          if (provider.state == VisionStateEnum.permissionDenied && !provider.hasActiveDocument)
             Positioned.fill(
               child: _buildPermissionDeniedView(context, provider),
             ),
 
           // 3. Vision Overlay Controls
-          if (provider.state != VisionStateEnum.permissionDenied)
+          if (provider.state != VisionStateEnum.permissionDenied || provider.hasActiveDocument)
             Positioned.fill(
               child: VisionControls(
                 provider: provider,

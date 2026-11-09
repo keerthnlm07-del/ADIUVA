@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../domain/entities/user_entity.dart';
 import '../../domain/repositories/auth_repository.dart';
@@ -288,7 +289,7 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<BaseResponse<UserEntity?>> getCurrentUser() async {
     try {
-      // 1. Get Firebase current user
+      // 1. Get Firebase current user (Authoritative source of truth)
       final authResponse = await _authRemoteDataSource.getCurrentUser();
 
       if (!authResponse.isSuccess) {
@@ -297,7 +298,7 @@ class AuthRepositoryImpl implements AuthRepository {
         );
       }
 
-      // If no user is logged in, return success with null
+      // If Firebase user is null, the user is unauthenticated. Do NOT manufacture session from local cache.
       if (authResponse.data == null) {
         return BaseResponse<UserEntity?>.success(
           data: null,
@@ -305,12 +306,38 @@ class AuthRepositoryImpl implements AuthRepository {
         );
       }
 
-      // 2. User exists, fetch their Firestore profile
+      // 2. User exists in Firebase Auth, fetch their profile (Firestore or local profile fallback)
       final userId = authResponse.data!.uid;
-      final userModel = await _getOrCreateFirestoreUser(userId: userId);
+      UserModel? userModel = await _getOrCreateFirestoreUser(userId: userId);
+
+      if (userModel == null) {
+        // Fallback to local profile cache for profile details (e.g. preferredName) when offline
+        try {
+          final cachedUser = await _authLocalDataSource.getCachedUser(targetUid: userId);
+          if (cachedUser != null && cachedUser.userId == userId) {
+            userModel = cachedUser;
+          }
+        } catch (_) {}
+      }
+
+      userModel ??= UserModel(
+        userId: userId,
+        email: authResponse.data!.email ?? '',
+        name: authResponse.data!.displayName ?? 'User',
+        userType: 'normal',
+        disabilityTypes: const <String>[],
+        language: 'en',
+        isActive: true,
+        createdAt: DateTime.now().millisecondsSinceEpoch,
+        updatedAt: DateTime.now().millisecondsSinceEpoch,
+      );
+
+      try {
+        await _authLocalDataSource.saveUserLocally(userModel);
+      } catch (_) {}
 
       return BaseResponse<UserEntity?>.success(
-        data: userModel?.toEntity(),
+        data: userModel.toEntity(),
         message: 'Current user retrieved',
       );
     } catch (e) {
@@ -333,23 +360,101 @@ class AuthRepositoryImpl implements AuthRepository {
 
         try {
           final userModel = await _getUserModelFromFirestore(firebaseUser.uid);
-          return userModel?.toEntity();
-        } catch (e) {
-          // If we can't get the profile, return minimal entity from Firebase user
-          return UserEntity(
-            userId: firebaseUser.uid,
-            email: firebaseUser.email ?? '',
-            name: firebaseUser.displayName ?? 'User',
-            userType: 'normal',
-            disabilityTypes: const <String>[],
-            language: 'en',
-            isActive: true,
-            createdAt: DateTime.now().millisecondsSinceEpoch,
-            updatedAt: DateTime.now().millisecondsSinceEpoch,
-          );
-        }
+          if (userModel != null) {
+            try {
+              await _authLocalDataSource.saveUserLocally(userModel);
+            } catch (_) {}
+            return userModel.toEntity();
+          }
+        } catch (_) {}
+
+        // Fallback: Check local storage cached user profile if Firestore read fails
+        try {
+          final cachedUser = await _authLocalDataSource.getCachedUser(targetUid: firebaseUser.uid);
+          if (cachedUser != null && cachedUser.userId == firebaseUser.uid) {
+            return cachedUser.toEntity();
+          }
+        } catch (_) {}
+
+        // If no cached profile exists, return minimal entity from Firebase user
+        return UserEntity(
+          userId: firebaseUser.uid,
+          email: firebaseUser.email ?? '',
+          name: firebaseUser.displayName ?? 'User',
+          userType: 'normal',
+          disabilityTypes: const <String>[],
+          language: 'en',
+          isActive: true,
+          createdAt: DateTime.now().millisecondsSinceEpoch,
+          updatedAt: DateTime.now().millisecondsSinceEpoch,
+        );
       },
     );
+  }
+
+  @override
+  Future<BaseResponse<UserEntity>> updatePreferredName({
+    required String userId,
+    required String preferredName,
+  }) async {
+    try {
+      final cleanName = preferredName.trim();
+      await _firebaseService.updateDocument(
+        'users/$userId',
+        {
+          'preferredName': cleanName,
+          'updatedAt': FieldValue.serverTimestamp(),
+        },
+      );
+
+      debugPrint('[AUTH_TRACE] nickname_saved uid=$userId preferredName=$cleanName');
+
+      UserModel? updatedModel;
+      try {
+        updatedModel = await _getUserModelFromFirestore(userId);
+      } catch (_) {}
+
+      if (updatedModel == null) {
+        try {
+          final cached = await _authLocalDataSource.getCachedUser(targetUid: userId);
+          if (cached != null) {
+            updatedModel = UserModel.fromEntity(cached.copyWith(preferredName: cleanName));
+          }
+        } catch (_) {}
+      }
+
+      if (updatedModel != null) {
+        await _authLocalDataSource.saveUserLocally(updatedModel);
+        return BaseResponse<UserEntity>.success(
+          data: updatedModel.toEntity(),
+          message: 'Preferred name updated successfully',
+        );
+      }
+
+      final fallbackEntity = UserEntity(
+        userId: userId,
+        email: '',
+        name: 'User',
+        preferredName: cleanName,
+        userType: 'normal',
+        disabilityTypes: const <String>[],
+        language: 'en',
+        isActive: true,
+        createdAt: DateTime.now().millisecondsSinceEpoch,
+        updatedAt: DateTime.now().millisecondsSinceEpoch,
+      );
+      final fallbackModel = UserModel.fromEntity(fallbackEntity);
+      await _authLocalDataSource.saveUserLocally(fallbackModel);
+
+      return BaseResponse<UserEntity>.success(
+        data: fallbackEntity,
+        message: 'Preferred name updated',
+      );
+    } catch (e) {
+      return BaseResponse<UserEntity>.error(
+        error: ApiException.unknown('Failed to update preferred name: $e'),
+      );
+    }
   }
 
   // ==================== PRIVATE HELPERS ====================
@@ -413,7 +518,21 @@ class AuthRepositoryImpl implements AuthRepository {
       }
 
       final data = doc.data() as Map<String, dynamic>;
-      return UserModel.fromFirestore(data);
+      UserModel model = UserModel.fromFirestore(data);
+
+      if (model.preferredName == null || model.preferredName!.trim().isEmpty) {
+        try {
+          final cached = await _authLocalDataSource.getCachedUser(targetUid: userId);
+          if (cached != null &&
+              cached.userId == userId &&
+              cached.preferredName != null &&
+              cached.preferredName!.trim().isNotEmpty) {
+            model = UserModel.fromEntity(model.copyWith(preferredName: cached.preferredName!.trim()));
+          }
+        } catch (_) {}
+      }
+
+      return model;
     } on ApiException {
       rethrow;
     } catch (e) {

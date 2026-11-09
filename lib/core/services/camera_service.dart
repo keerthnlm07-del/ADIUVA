@@ -27,11 +27,13 @@ class CameraService extends ChangeNotifier {
   CameraState _state = CameraState.uninitialized;
   String? _errorMessage;
   bool _isFlashOn = false;
+  CameraLensDirection _currentLens = CameraLensDirection.back;
 
   CameraController? get controller => _controller;
   CameraState get state => _state;
   String? get errorMessage => _errorMessage;
   bool get isFlashOn => _isFlashOn;
+  CameraLensDirection get currentLens => _currentLens;
   bool get isInitialized => _controller != null && _controller!.value.isInitialized;
 
   /// Check camera permission state without auto-requesting
@@ -40,7 +42,11 @@ class CameraService extends ChangeNotifier {
   }
 
   /// Request camera permission and initialize back camera safely
-  Future<void> initializeCamera() async {
+  Future<void> initializeCamera([
+    CameraLensDirection direction = CameraLensDirection.back,
+    ImageFormatGroup? imageFormatGroup,
+  ]) async {
+    _currentLens = direction;
     if (_state == CameraState.initializing || isInitialized) return;
 
     _state = CameraState.initializing;
@@ -71,17 +77,19 @@ class CameraService extends ChangeNotifier {
         return;
       }
 
-      // Find primary back camera
-      final backCamera = _cameras.firstWhere(
-        (c) => c.lensDirection == CameraLensDirection.back,
+      final targetCamera = _cameras.firstWhere(
+        (c) => c.lensDirection == direction,
         orElse: () => _cameras.first,
       );
 
       final controller = CameraController(
-        backCamera,
+        targetCamera,
         ResolutionPreset.medium,
         enableAudio: false,
-        imageFormatGroup: ImageFormatGroup.jpeg,
+        imageFormatGroup: imageFormatGroup ??
+            (defaultTargetPlatform == TargetPlatform.android
+                ? ImageFormatGroup.yuv420
+                : ImageFormatGroup.bgra8888),
       );
 
       _controller = controller;
@@ -158,6 +166,16 @@ class CameraService extends ChangeNotifier {
     } catch (e) {
       debugPrint('[CameraService] stopImageStream error: $e');
     }
+  }
+
+  /// Switch between back and front camera lenses
+  Future<void> switchCamera() async {
+    if (_cameras.length < 2) return;
+    final newDirection = _currentLens == CameraLensDirection.back
+        ? CameraLensDirection.front
+        : CameraLensDirection.back;
+    await disposeCamera();
+    await initializeCamera(newDirection);
   }
 
   /// Safe dispose camera controller

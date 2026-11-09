@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../../../core/di/service_locator.dart';
-import '../../../../core/services/local_storage_service.dart';
 import '../../../../core/theme/adiuva_colors.dart';
 import '../../../../core/theme/adiuva_spacing.dart';
 import '../../../../core/widgets/accessibility_scaffold.dart';
@@ -17,36 +15,53 @@ class SplashPage extends StatefulWidget {
 }
 
 class _SplashPageState extends State<SplashPage> {
+  bool _hasNavigated = false;
+
   @override
   void initState() {
     super.initState();
     _checkAppStateAndNavigate();
   }
 
+  void _safeNavigate(String routeName) {
+    if (_hasNavigated) return;
+    _hasNavigated = true;
+    debugPrint('[AUTH_FINAL] route=$routeName');
+    final navState = AppRoutes.navigatorKey.currentState;
+    if (navState != null) {
+      navState.pushReplacementNamed(routeName);
+    } else if (mounted) {
+      Navigator.of(context).pushReplacementNamed(routeName);
+    }
+  }
+
   Future<void> _checkAppStateAndNavigate() async {
-    // Artificial minimum delay for smooth visual transition
-    await Future.delayed(const Duration(milliseconds: 1200));
-    if (!mounted) return;
-
-    final localStorageService = sl<LocalStorageService>();
-    final onboardingCompleted = (await localStorageService.getBool('onboarding_completed')) ?? false;
-
-    if (!mounted) return;
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
 
-    // Persistent login gate: Check and resolve Firebase Auth status
+    debugPrint('[AUTH_TRACE] waiting_for_auth_state');
+
+    // Artificial minimum delay for smooth visual transition
+    await Future.delayed(const Duration(milliseconds: 1000));
+    if (!mounted || _hasNavigated) return;
+
+    // Persistent login gate: Await Firebase Auth session resolution
     final isAuthenticated = await authProvider.checkAuthStatus();
 
-    if (!mounted) return;
+    if (!mounted || _hasNavigated) return;
 
-    if (!onboardingCompleted) {
-      Navigator.of(context).pushReplacementNamed(AppRoutes.onboarding);
-    } else if (isAuthenticated) {
-      // Authenticated user goes directly to Home Dashboard
-      Navigator.of(context).pushReplacementNamed(AppRoutes.home);
+    if (isAuthenticated) {
+      final user = authProvider.user;
+      final uid = user?.userId ?? '';
+      debugPrint('[AUTH_TRACE] current_user=$uid');
+      debugPrint('[AUTH_TRACE] session_restored');
+      debugPrint('[AUTH_TRACE] loading_profile');
+      debugPrint('[AUTH_TRACE] greeting_name=${user?.greetingName ?? ""}');
+      debugPrint('[AUTH_TRACE] navigating_home');
+      _safeNavigate(AppRoutes.home);
     } else {
-      // Unauthenticated user goes to Login Page
-      Navigator.of(context).pushReplacementNamed(AppRoutes.login);
+      debugPrint('[AUTH_TRACE] current_user=null');
+      debugPrint('[AUTH_TRACE] login_required');
+      _safeNavigate(AppRoutes.login);
     }
   }
 
